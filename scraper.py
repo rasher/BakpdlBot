@@ -177,10 +177,10 @@ class Scraper:
     ROOT = '/'
 
     def __init__(self, username, password, sleep=None):
+        self.sleep = self.DEFAULT_SLEEP if sleep is None else sleep
         self.session = HTMLSession()
         with self.session.cache_disabled():
             self._login(username, password)
-        self.sleep = self.DEFAULT_SLEEP if sleep is None else sleep
 
     def get_profile(self, pid: int):
         p = Profile(pid, scraper=self)
