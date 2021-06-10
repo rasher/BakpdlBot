@@ -173,9 +173,13 @@ class Profile(Fetchable):
 
 class Scraper:
     DEFAULT_SLEEP = 5.0
+    HOST = 'https://zwiftpower.com'
+    ROOT = '/'
 
-    def __init__(self, sleep=None):
+    def __init__(self, username, password, sleep=None):
         self.session = HTMLSession()
+        with self.session.cache_disabled():
+            self._login(username, password)
         self.sleep = self.DEFAULT_SLEEP if sleep is None else sleep
 
     def get_profile(self, pid: int):
@@ -196,6 +200,26 @@ class Scraper:
 
     def team(self, tid):
         return Team(tid, self)
+
+    def _login(self, username, password):
+        login_form_resp = self.get_url(self.HOST + self.ROOT)
+        form = login_form_resp.html.find('form#login', first=True)
+        data = {}
+        for inp in form.find('input'):
+            data[inp.attrs['name']] = inp.attrs.get('value', None)
+        del(data['autologin'])
+        del(data['viewonline'])
+        data['username'] = username
+        data['password'] = password
+        action = form.attrs['action']
+
+        signon_resp = self.session.post(self.HOST + '/' + action, data)
+        if signon_resp.html.find('form#login', first=True) is not None:
+            raise Exception("Not logged in")
+
+        fp_resp = self.get_url(self.HOST + self.ROOT)
+        if fp_resp.html.find('form#login', first=True) is not None:
+            raise Exception("Not still logged in")
 
 
 if __name__ == '__main__':
