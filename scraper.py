@@ -1,7 +1,7 @@
 import re
 import time
+from datetime import datetime
 import traceback
-from pprint import pprint
 
 import demjson
 from requests import Response
@@ -94,16 +94,18 @@ class Team(Fetchable):
 
 
 class Profile(Fetchable):
-    URL = 'https://www.zwiftpower.com/profile.php?z=%d'
+    URL_PROFILE = 'https://www.zwiftpower.com/profile.php?z={pid}'
+    URL_RACES = 'https://zwiftpower.com/cache3/profile/{pid}_all.json?_={ts}'
 
     def __init__(self, pid: int, scraper):
         super().__init__(scraper)
         self.pid = pid
         self._html = None
+        self._races = None
 
     @property
     def url(self):
-        return self.URL % self.pid
+        return self.URL_PROFILE.format(pid=self.pid)
 
     @property
     def html(self):
@@ -125,6 +127,36 @@ class Profile(Fetchable):
         s = self._get_text('#profile_information > tr:nth-child(1) > td > small > b:nth-child(2)')
         if s:
             return int(s.split("\n")[0].strip().replace(',', ''))
+
+    @property
+    def races(self):
+        if not self._races:
+            url = self.URL_RACES.format(pid=self.pid, ts=int(datetime.now().timestamp()*1000))
+            self._races = self.scraper.get_url(url).json()['data']
+        return self._races
+
+    @property
+    def latest_race(self):
+        r = sorted(self.races, key=lambda r: r['event_date'], reverse=True)
+        if len(r) > 0:
+            return r[0]
+        return None
+
+    @property
+    def height(self):
+        race = self.latest_race
+        if not race:
+            return None
+        height = int(race['height'][0])
+        return height if height > 0 else None
+
+    @property
+    def weight(self):
+        race = self.latest_race
+        if not race:
+            return None
+        weight = float(race['weight'][0])
+        return weight if weight > 0 else None
 
     @property
     def power_profile(self):
@@ -179,15 +211,11 @@ class Scraper:
     def __init__(self, username, password, sleep=None):
         self.sleep = self.DEFAULT_SLEEP if sleep is None else sleep
         self.session = HTMLSession()
-        with self.session.cache_disabled():
+        if hasattr(self.session, 'cache_disabled'):
+            with self.session.cache_disabled():
+                self._login(username, password)
+        else:
             self._login(username, password)
-
-    def get_profile(self, pid: int):
-        p = Profile(pid, scraper=self)
-        return p
-
-    def get_team(self, tid: int):
-        return Team(tid, scraper=self)
 
     def get_url(self, url: str) -> Response:
         resp = self.session.get(url)
@@ -195,11 +223,11 @@ class Scraper:
             time.sleep(self.sleep)
         return resp
 
-    def profile(self, pid):
-        return Profile(pid, self)
+    def profile(self, pid: int) -> Profile:
+        return Profile(pid, scraper=self)
 
-    def team(self, tid):
-        return Team(tid, self)
+    def team(self, tid: int) -> Team:
+        return Team(tid, scraper=self)
 
     def _login(self, username, password):
         login_form_resp = self.get_url(self.HOST + self.ROOT)
@@ -223,32 +251,7 @@ class Scraper:
 
 
 if __name__ == '__main__':
-    s = Scraper(sleep=1.0)
-    from datetime import datetime
-    ts = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-    for pid in [
-        1412,
-        4134,
-        1557055,
-        1567952,
-        998676,
-        2383255,
-        2639298,
-        1558036,
-        1670475,
-        802986,
-        1646521,
-    ]:
-        p = s.profile(pid)
-        print("{p.name} - {p.url}".format(p=p))
-        pp = p.power_profile
-        with open('%s_%d.html' % (ts, pid), 'w') as fp:
-            fp.write(p.html.html)
-        if None in (
-                pp['wkg'][15]['value'],
-                pp['wkg'][60]['value'],
-                pp['wkg'][300]['value'],
-                pp['wkg'][1200]['value']):
-            pprint(pp)
-            print(p.html.html)
-            break
+    import os
+    s = Scraper(sleep=1.0, username=os.environ.get('ZP_USER', ''), password=os.environ.get('ZP_PASS', ''))
+    me = s.profile(514482)
+    print("{p.name}: {p.height} cm, {p.weight} kg".format(p=me))
