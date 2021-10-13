@@ -1,6 +1,5 @@
 import re
 import time
-from datetime import datetime
 import traceback
 
 import demjson
@@ -61,9 +60,7 @@ class Team(Fetchable):
             t = time.time()
             t -= t % 3600
             url = self.RIDERS % (self.tid, t)
-            resp = self.scraper.session.get(url)
-            if not getattr(resp, 'from_cache', False):
-                time.sleep(self.scraper.sleep)
+            resp = self.scraper.get_url(url)
             self._riders_json = resp.json()
         return self._riders_json
 
@@ -95,7 +92,7 @@ class Team(Fetchable):
 
 class Profile(Fetchable):
     URL_PROFILE = 'https://www.zwiftpower.com/profile.php?z={pid}'
-    URL_RACES = 'https://zwiftpower.com/cache3/profile/{pid}_all.json?_={ts}'
+    URL_RACES = 'https://zwiftpower.com/cache3/profile/{pid}_all.json'
 
     def __init__(self, pid: int, scraper):
         super().__init__(scraper)
@@ -131,7 +128,7 @@ class Profile(Fetchable):
     @property
     def races(self):
         if not self._races:
-            url = self.URL_RACES.format(pid=self.pid, ts=int(datetime.now().timestamp()*1000))
+            url = self.URL_RACES.format(pid=self.pid)
             self._races = self.scraper.get_url(url).json()['data']
         return self._races
 
