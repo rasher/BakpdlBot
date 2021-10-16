@@ -1,4 +1,5 @@
 import re
+import sys
 import time
 import traceback
 
@@ -217,7 +218,10 @@ class Scraper:
     def get_url(self, url: str) -> Response:
         resp = self.session.get(url)
         if not getattr(resp, 'from_cache', False):
+            sys.stderr.write("CACHE MISS: %s\n" % url)
             time.sleep(self.sleep)
+        else:
+            sys.stderr.write("CACHE HIT:  %s\n" % url)
         return resp
 
     def profile(self, pid: int) -> Profile:
