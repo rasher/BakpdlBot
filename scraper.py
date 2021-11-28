@@ -34,6 +34,24 @@ class Rider:
         return self.data.get(item, None)
 
 
+class Race(Fetchable):
+    URL = 'https://zwiftpower.com/events.php?zid=2350665'
+    URL_SIGNUPS = 'https://zwiftpower.com/cache3/results/{rid}_signups.json'
+
+    def __init__(self, rid, scraper):
+        super().__init__(scraper)
+        self.rid = rid
+        self._signups = None
+
+    @property
+    def signups(self):
+        if not self._signups:
+            url = self.URL_SIGNUPS.format(rid=self.rid)
+            self._signups = self.scraper.get_url(url).json()
+        for entrant in self._signups['data']:
+            yield Rider(entrant, scraper=self.scraper)
+
+
 class Team(Fetchable):
     URL = 'https://www.zwiftpower.com/team.php?id=%d'
     RIDERS = 'https://www.zwiftpower.com/api3.php?do=team_riders&id=%d&_=%d'
@@ -94,12 +112,15 @@ class Team(Fetchable):
 class Profile(Fetchable):
     URL_PROFILE = 'https://www.zwiftpower.com/profile.php?z={pid}'
     URL_RACES = 'https://zwiftpower.com/cache3/profile/{pid}_all.json'
+    URL_CP = 'https://zwiftpower.com/api3.php?do=critical_power_profile&zwift_id={pid}&zwift_event_id=&type={type}'
 
     def __init__(self, pid: int, scraper):
         super().__init__(scraper)
         self.pid = pid
         self._html = None
         self._races = None
+        self._cp_wkg = None
+        self._cp_watts = None
 
     @property
     def url(self):
@@ -125,6 +146,18 @@ class Profile(Fetchable):
         s = self._get_text('#profile_information > tr:nth-child(1) > td > small > b:nth-child(2)')
         if s:
             return int(s.split("\n")[0].strip().replace(',', ''))
+
+    @property
+    def ftp(self):
+        tag = self.html.xpath("//th[normalize-space() = 'FTP'][1]/following-sibling::td[1]")[0]
+        # 220w ~ 86kg
+        return int(tag.text.strip().split('w', 1)[0])
+
+    @property
+    def punch(self):
+        s = self._get_text('#table_scroll_overview > div.btn-toolbar > div.pull-right > div.progress > div.progress-bar > span')
+        if m := re.search('Punch: (?P<punch>[0-9\.]*)%', s):
+            return float(m.group('punch'))
 
     @property
     def races(self):
@@ -155,6 +188,20 @@ class Profile(Fetchable):
             return None
         weight = float(race['weight'][0])
         return weight if weight > 0 else None
+
+    @property
+    def cp_watts(self):
+        if not self._cp_watts:
+            url_watts = self.URL_CP.format(pid=self.pid, type='watts')
+            self._cp_watts = self.scraper.get_url(url_watts).json()
+        return {effort: {p['x']: p['y'] for p in data} for effort, data in self._cp_watts['efforts'].items()}
+
+    @property
+    def cp_wkg(self):
+        if not self._cp_wkg:
+            url_wkg = self.URL_CP.format(pid=self.pid, type='wkg')
+            self._cp_wkg = self.scraper.get_url(url_wkg).json()
+        return {effort: {p['x']: p['y'] for p in data} for effort, data in self._cp_wkg['efforts'].items()}
 
     @property
     def power_profile(self):
@@ -230,6 +277,9 @@ class Scraper:
     def team(self, tid: int) -> Team:
         return Team(tid, scraper=self)
 
+    def race(self, rid: int) -> Race:
+        return Race(rid, scraper=self)
+
     def _login(self, username, password):
         login_form_resp = self.get_url(self.HOST + self.ROOT)
         form = login_form_resp.html.find('form#login', first=True)
@@ -245,10 +295,6 @@ class Scraper:
         signon_resp = self.session.post(self.HOST + '/' + action, data)
         if signon_resp.html.find('form#login', first=True) is not None:
             raise Exception("Not logged in")
-
-        fp_resp = self.get_url(self.HOST + self.ROOT)
-        if fp_resp.html.find('form#login', first=True) is not None:
-            raise Exception("Not still logged in")
 
 
 if __name__ == '__main__':
