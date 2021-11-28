@@ -156,7 +156,8 @@ class Profile(Fetchable):
     @property
     def punch(self):
         s = self._get_text('#table_scroll_overview > div.btn-toolbar > div.pull-right > div.progress > div.progress-bar > span')
-        if m := re.search('Punch: (?P<punch>[0-9\.]*)%', s):
+        m = re.search('Punch: (?P<punch>[0-9\.]*)%', s)
+        if m:
             return float(m.group('punch'))
 
     @property
