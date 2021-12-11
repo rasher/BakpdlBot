@@ -1,4 +1,4 @@
-from bakpdlbot.googledocs.main import GoogleSheetValues
+from .main import GoogleSheetValues
 
 
 def findteam(teamname='BAKPDL 1',teamsize=8):

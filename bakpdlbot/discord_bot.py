@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 
 # 1
 from discord.ext import commands
+from googledocs.ttt_sheet import findteam
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -38,8 +39,11 @@ async def sheet(ctx):
     await ctx.send(message)
 
 @bot.command(name='ttt-team', help='Shows the current ttt-team <name>')
-async def events(ctx,name):
-    message='you send ' + name
+async def events(ctx,*args):
+    if len(args) == 0:
+        message = 'No teamname given, default BAKPDL 1 chosen\n' + findteam(teamname='BAKPDL 1')
+    else:
+        message = findteam(teamname=' '.join(args))
     await ctx.send(message)
 
 
