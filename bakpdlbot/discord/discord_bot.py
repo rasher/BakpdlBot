@@ -27,5 +27,13 @@ async def events(ctx):
             '<https://zwiftpower.com/series.php?id=BACKPEDAL>'
     await ctx.send(message)
 
+@bot.command(name='zrl', help='Give information about our Backpedal ZRL teams')
+async def sheet(ctx):
+    user = ctx.author
+    message=f'Hey {user},\n' \
+            f'Find the sign-up form at:\n' \
+            '<https://forms.gle/ePGi4XVYoUkg4k6q9>'
+    await ctx.send(message)
+
 
 bot.run(TOKEN)
