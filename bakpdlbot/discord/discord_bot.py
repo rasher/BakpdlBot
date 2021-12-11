@@ -37,5 +37,10 @@ async def sheet(ctx):
             '<https://forms.gle/ePGi4XVYoUkg4k6q9>'
     await ctx.send(message)
 
+@bot.command(name='ttt-team', help='Shows the current ttt-team <name>')
+async def events(ctx,name):
+    message='you send ' + name
+    await ctx.send(message)
+
 
 bot.run(TOKEN)
