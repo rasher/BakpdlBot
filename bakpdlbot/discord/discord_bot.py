@@ -30,7 +30,7 @@ async def events(ctx):
 @bot.command(name='zrl', help='Give information about our Backpedal ZRL teams')
 async def sheet(ctx):
     user = str(ctx.author).split('#')[0]
-    message='Hey ' + {user} + '' \
+    message='Hey ' + user + '' \
             '\nZwift Racing League starts january 11th,' \
             '\nAre you interested in racing with Backpedal?' \
             '\nFind the sign-up form at: ' \
