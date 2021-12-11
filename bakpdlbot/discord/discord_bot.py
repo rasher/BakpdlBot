@@ -14,20 +14,20 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 # 2
 bot = commands.Bot(command_prefix='!')
 
-@bot.command(name='sheet', help='shares the link to the google sheet')
+@bot.command(name='sheet', help='Shares the link to the google sheet')
 async def sheet(ctx):
     message='Find the google sheet at:\n' \
             '<https://docs.google.com/spreadsheets/d/16ip9cd6kpH2fl0dJYlG4UC1VOJL2eYjd8WSSXJMjss4/edit?usp=sharing>'
     await ctx.send(message)
 
-@bot.command(name='events', help='shares the link to backpedal zwift events')
+@bot.command(name='events', help='Shares the link to backpedal zwift events')
 async def events(ctx):
     message='Find our Backpedal events here:\n' \
             '<https://www.zwift.com/events/tag/backpedal>\n' \
             '<https://zwiftpower.com/series.php?id=BACKPEDAL>'
     await ctx.send(message)
 
-@bot.command(name='zrl', help='Give information about our Backpedal ZRL teams')
+@bot.command(name='zrl', help='Shares the information to sign up for Backpedal ZRL teams')
 async def sheet(ctx):
     user = str(ctx.author).split('#')[0]
     message='Hey ' + user + '' \
