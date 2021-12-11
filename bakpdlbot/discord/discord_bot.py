@@ -1,6 +1,8 @@
 # discord_bot.py
 import os
 
+#pip install -U python-dotenv==0.19.2
+#pip install -U discord==1.7.3
 from dotenv import load_dotenv
 
 # 1
