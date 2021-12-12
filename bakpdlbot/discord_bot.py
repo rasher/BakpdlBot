@@ -34,10 +34,10 @@ async def events(ctx):
 async def zrl(ctx):
     user = str(ctx.author).split('#')[0]
     current_signups = ZrlSignups()
-    message='Hey ' + user + '' \
+    message='```Hey ' + user + '' \
             '\nZwift Racing League starts january 11th,\n' \
             + current_signups + ' sign-ups so far! Find the sign-up form at: ' \
-            '<https://forms.gle/ePGi4XVYoUkg4k6q9>'
+            '```<https://forms.gle/ePGi4XVYoUkg4k6q9>'
     await ctx.send(message)
 
 @bot.command(name='ttt-team', help='Shows the current ttt-team <name>')
@@ -47,9 +47,9 @@ async def events(ctx,*args):
         for i in range(1,6):
             tname = 'BAKPDL ' + str(i)
             teams.append(findteam(teamname=tname))
-        message = 'Showing all Backpedal TTT team signups\n' + '\n'.join([team for team in teams])
+        message = '```Showing all Backpedal TTT team signups\n' + '\n'.join([team for team in teams]) + '```'
     else:
-        message = findteam(teamname=' '.join(args))
+        message = '```' + findteam(teamname=' '.join(args)) + '```'
     await ctx.send(message)
 
 
