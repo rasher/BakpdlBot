@@ -8,6 +8,7 @@ from click.testing import CliRunner
 
 from bakpdlbot import bakpdlbot
 from bakpdlbot import cli
+from bakpdlbot.googledocs.ttt_sheet import findteam
 
 
 class TestBakpdlbot(unittest.TestCase):
@@ -31,3 +32,12 @@ class TestBakpdlbot(unittest.TestCase):
         help_result = runner.invoke(cli.main, ['--help'])
         assert help_result.exit_code == 0
         assert '--help  Show this message and exit.' in help_result.output
+
+    def test_ttt(self):
+        teams = []
+        for i in range(1, 6):
+            tname = 'BAKPDL ' + str(i)
+            print(tname)
+            teams.append(findteam(teamname=tname))
+        message = 'Showing all Backpedal TTT team signups' + '\n'.join([team for team in teams])
+        print(message)

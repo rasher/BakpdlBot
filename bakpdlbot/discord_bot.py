@@ -41,7 +41,11 @@ async def sheet(ctx):
 @bot.command(name='ttt-team', help='Shows the current ttt-team <name>')
 async def events(ctx,*args):
     if len(args) == 0:
-        message = 'No teamname given, default BAKPDL 1 chosen\n' + findteam(teamname='BAKPDL 1')
+        teams = []
+        for i in range(1,6):
+            tname = 'BAKPDL ' + str(i)
+            teams.append(findteam(teamname=tname))
+        message = 'Showing all Backpedal TTT team signups\n' + '\n'.join([team for team in teams])
     else:
         message = findteam(teamname=' '.join(args))
     await ctx.send(message)
