@@ -35,12 +35,9 @@ class TestBakpdlbot(unittest.TestCase):
         assert '--help  Show this message and exit.' in help_result.output
 
     def test_ttt(self):
-        teams = []
-        for i in range(1, 6):
-            tname = 'BAKPDL ' + str(i)
-            print(tname)
-            teams.append(findteam(teamname=tname))
-        message = 'Showing all Backpedal TTT team signups' + '\n'.join([team for team in teams])
+        tname='BAKPDL 1'
+        message = findteam(teamname=tname)
+        #message = 'Showing all Backpedal TTT team signups' + '\n'.join([team for team in teams])
         print(message)
 
     def test_zrlvalues(self):

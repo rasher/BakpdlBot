@@ -1,4 +1,18 @@
 from .main import GoogleSheetValues
+from tabulate import tabulate
+
+def ZwiftCatEmoji(zcat=None):
+    """
+    Return str to emoji for backpedal server
+    :param zcat: str A+ A B C D E
+    :return: str zcat emoji for backpedal server
+    """
+    if zcat == None:
+        return None
+    if zcat == 'A+':
+        return ':zcataplus:'
+    if zcat in ['A','B','C','D','E']:
+        return ':zcat' + zcat.lower() + ':'
 
 
 def findteam(teamname='BAKPDL 1',teamsize=8):
@@ -17,12 +31,14 @@ def findteam(teamname='BAKPDL 1',teamsize=8):
                 if row[1] == teamname:
                     i = values.index(row)
                     for j in range(teamsize):
-                        members.append(values[i+1+j][3])
-                    teammembers = list(filter(None, members))
+                        if values[i+1+j][1] != '':
+                            riderinfo = [values[i+1+j][k] for k in [1, 3, 4, 5]]
+                            members.append(riderinfo)
+                        teammembers = list(filter(None, members))
                     if len(teammembers) == 0:
                         return teamname + ': 0 riders'
                     if len(teammembers) > 0:
-                        namelist = ', '.join([member for member in teammembers])
+                        namelist = tabulate(teammembers)
                         message = teamname + ' (' + str(len(teammembers)) + ' riders):\n' + namelist
                         return message
         return 'No team found with name: ' + teamname
