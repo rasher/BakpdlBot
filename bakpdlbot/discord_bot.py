@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 
 # 1
 from discord.ext import commands
+
+from googledocs.zrl import ZrlSignups
 from googledocs.ttt_sheet import findteam
 
 load_dotenv()
@@ -29,12 +31,12 @@ async def events(ctx):
     await ctx.send(message)
 
 @bot.command(name='zrl', help='Shares the information to sign up for Backpedal ZRL teams')
-async def sheet(ctx):
+async def zrl(ctx):
     user = str(ctx.author).split('#')[0]
+    current_signups = ZrlSignups()
     message='Hey ' + user + '' \
-            '\nZwift Racing League starts january 11th,' \
-            '\nAre you interested in racing with Backpedal?' \
-            '\nFind the sign-up form at: ' \
+            '\nZwift Racing League starts january 11th,\n' \
+            + current_signups + ' sign-ups so far! Find the sign-up form at: ' \
             '<https://forms.gle/ePGi4XVYoUkg4k6q9>'
     await ctx.send(message)
 

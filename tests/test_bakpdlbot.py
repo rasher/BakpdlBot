@@ -9,6 +9,7 @@ from click.testing import CliRunner
 from bakpdlbot import bakpdlbot
 from bakpdlbot import cli
 from bakpdlbot.googledocs.ttt_sheet import findteam
+from bakpdlbot.googledocs.zrl import ZrlSignups
 
 
 class TestBakpdlbot(unittest.TestCase):
@@ -41,3 +42,7 @@ class TestBakpdlbot(unittest.TestCase):
             teams.append(findteam(teamname=tname))
         message = 'Showing all Backpedal TTT team signups' + '\n'.join([team for team in teams])
         print(message)
+
+    def test_zrlvalues(self):
+        values = ZrlSignups()
+        print(values)
