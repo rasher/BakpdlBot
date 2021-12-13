@@ -8,8 +8,8 @@ from click.testing import CliRunner
 
 from bakpdlbot import bakpdlbot
 from bakpdlbot import cli
-from bakpdlbot.googledocs.ttt_sheet import findteam
-from bakpdlbot.googledocs.zrl import ZrlSignups
+from bakpdlbot.googledocs.ttt_sheet import FindTttTeam
+from bakpdlbot.googledocs.zrl import ZrlSignups, ZrlTeam
 
 
 class TestBakpdlbot(unittest.TestCase):
@@ -36,10 +36,18 @@ class TestBakpdlbot(unittest.TestCase):
 
     def test_ttt(self):
         tname='BAKPDL 1'
-        message = findteam(teamname=tname)
+        message = FindTttTeam(teamname=tname)
         #message = 'Showing all Backpedal TTT team signups' + '\n'.join([team for team in teams])
         print(message)
 
     def test_zrlvalues(self):
         values = ZrlSignups()
         print(values)
+
+    def test_zrlteams(self):
+        message = ZrlTeam(teamtag='A1', full=False)
+        print(message)
+
+    def test_range(self):
+        for i in range(1,19):
+            print(i)

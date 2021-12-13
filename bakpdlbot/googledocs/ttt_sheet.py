@@ -15,7 +15,7 @@ def ZwiftCatEmoji(zcat=None):
         return ':zcat' + zcat.lower() + ':'
 
 
-def findteam(teamname='BAKPDL 1',teamsize=8):
+def FindTttTeam(teamname='BAKPDL 1',teamsize=8):
     """
     :param teamname: string, backpedal teamname to lookup in sheet
     :param teamsize: int, team size, default 8

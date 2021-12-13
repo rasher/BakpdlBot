@@ -8,8 +8,8 @@ from dotenv import load_dotenv
 # 1
 from discord.ext import commands
 
-from googledocs.zrl import ZrlSignups
-from googledocs.ttt_sheet import findteam
+from googledocs.zrl import ZrlSignups, ZrlTeam
+from googledocs.ttt_sheet import FindTttTeam
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -46,11 +46,21 @@ async def events(ctx,*args):
         teams = []
         for i in range(1,6):
             tname = 'BAKPDL ' + str(i)
-            teams.append(findteam(teamname=tname))
+            teams.append(FindTttTeam(teamname=tname))
         message = '```Showing all Backpedal TTT team signups\n' + '\n'.join([team for team in teams]) + '```'
     else:
-        message = '```' + findteam(teamname=' '.join(args)) + '```'
+        message = '```' + FindTttTeam(teamname=' '.join(args)) + '```'
     await ctx.send(message)
 
+@bot.command(name='zrl-team', help='Shows the zrl-team <teamtag> "full"')
+async def events(ctx,*args):
+    if len(args) != 1:
+        if len(args) == 2 and args[1] == 'full':
+            message = '```' + ZrlTeam(teamtag=args[0], full=True) + '```'
+        else:
+            message = '```Please type in !zrl-team <teamtag> "full". example: !zrl-team A1```'
+    else:
+        message = '```' + ZrlTeam(teamtag=args[0]) + '```'
+    await ctx.send(message)
 
 bot.run(TOKEN)
