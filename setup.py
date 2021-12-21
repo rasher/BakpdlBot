@@ -10,7 +10,14 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = ['Click>=7.0', ]
+requirements = [
+        'Click>=7.0',
+        'discord>=1.7.3,<2',
+        'python-dotenv>=0.19.2,<0.20',
+        'google-api-python-client>=2.33.0,<2.34',
+        'google-auth-oauthlib>=0.4.6,<0.5',
+        'tabulate>=0.8.9,<0.9',
+        ]
 
 test_requirements = [ ]
 
