@@ -4,6 +4,6 @@ git pull
 source venv/bin/activate
 if [[ "$VIRTUAL_ENV" != "" ]]
 then
-    pip install -r requirements_dev.txt
-    python bakpdlbot/discord_bot.py
+    pip install -e .
+    bakpdlbot
 fi

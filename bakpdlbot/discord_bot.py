@@ -1,20 +1,9 @@
-# discord_bot.py
-import os
-
-#pip install -U python-dotenv==0.19.2
-#pip install -U discord==1.7.3
-from dotenv import load_dotenv
-
-# 1
 from discord.ext import commands
 
-from googledocs.zrl import ZrlSignups, ZrlTeam
-from googledocs.ttt_sheet import FindTttTeam
+from .googledocs.zrl import ZrlSignups, ZrlTeam
+from .googledocs.ttt_sheet import FindTttTeam
 
-load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
 
-# 2
 bot = commands.Bot(command_prefix='!')
 
 @bot.command(name='sheet', help='Shares the link to the google sheet')
@@ -62,5 +51,3 @@ async def events(ctx,*args):
     else:
         message = '```' + ZrlTeam(teamtag=args[0]) + '```'
     await ctx.send(message)
-
-bot.run(TOKEN)
