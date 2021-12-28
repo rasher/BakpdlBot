@@ -18,7 +18,7 @@ requirements = [
         'google-auth-oauthlib~=0.4.1',
         'tabulate~=0.8.9',
         'ago~=0.0.93',
-        'requests~=2.26.0',
+        'requests~=2.25.1',
         'pendulum~=2.1.2',
         ]
 
