@@ -63,6 +63,8 @@ async def event_embed(message, event):
 
 @bot.listen("on_message")
 async def zwift_link_embed(message):
+    if message.channel.name not in ('bot-test', 'looking-for-company', 'team-bus-event-talk'):
+        return
     eventlink = re.compile(r'https://www.zwift.com/.*events/.*view/(?P<eid>[0-9]+)(?:\?eventSecret=(?P<secret>[0-9a-z]+))?')
     m = eventlink.search(message.content)
     if m:
