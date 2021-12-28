@@ -11,11 +11,11 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
 requirements = [
-        'Click~=8.0.3',
+        'Click~=7.0',
         'discord~=1.7.3',
         'python-dotenv~=0.19.2',
-        'google-api-python-client~=2.33.0',
-        'google-auth-oauthlib~=0.4.6',
+        'google-api-python-client~=1.12.8',
+        'google-auth-oauthlib~=0.4.1',
         'tabulate~=0.8.9',
         'ago~=0.0.93',
         'requests~=2.26.0',
@@ -27,13 +27,14 @@ test_requirements = [ ]
 setup(
     author="Mick Boekhoff",
     author_email='mickboekhoff@hotmail.com',
-    python_requires='>=3.6',
+    python_requires='>=3.5',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
         'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
