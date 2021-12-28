@@ -17,6 +17,9 @@ requirements = [
         'google-api-python-client~=1.12.8',
         'google-auth-oauthlib~=0.4.1',
         'tabulate~=0.8.9',
+        'ago~=0.0.93',
+        'requests~=2.26.0',
+        'pendulum~=2.1.2',
         ]
 
 test_requirements = [ ]
