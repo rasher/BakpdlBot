@@ -23,7 +23,7 @@ async def event_embed(message, event):
     for c in 'ABCDE':
         cat_emoji[c] = discord.utils.get(message.guild.emojis, name='zcat' + c.lower())
 
-    start: pendulum.datetime = event.event_start
+    start = event.event_start
     embed = (
         discord.Embed(title=event.name, url=event.url)
             #.set_image(url=event.image_url)
