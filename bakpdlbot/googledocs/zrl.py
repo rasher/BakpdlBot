@@ -47,3 +47,29 @@ def ZrlTeam(teamtag=None,teamsize=12,full=False):
                     message = tabulate(teaminfo, headers=tableheader)
                     return message
         return 'Team ' + teamtag + ' not found'
+
+def GetZwiftIdFromSheet(name=None):
+    '''
+
+    :param name: string input name
+    :return: str zwift id if found
+    :return: amount of found zwift ids
+    '''
+    ## sheet connection
+    values = GoogleSheetValues(spreadsheetid='16ip9cd6kpH2fl0dJYlG4UC1VOJL2eYjd8WSSXJMjss4',
+                               range='Backpedal.cc!A:C')
+    zwiftid=[]
+    if not values:
+        return 'Something went wrong connecting to the google sheet'
+    else:
+        for row in values:
+            if len(row) > 2:
+                if name.lower() in row[2].lower():
+                    zwiftid.append(row[0])
+
+    if len(zwiftid) == 1:
+        return zwiftid[0], 1
+    if len(zwiftid) > 1:
+        msg = 'Multiple IDs (' + str(len(zwiftid)) + ') found: ' + ' '.join(zwiftid)
+        return msg, len(zwiftid)
+    return None

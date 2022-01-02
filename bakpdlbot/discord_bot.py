@@ -7,7 +7,7 @@ import pendulum
 
 from discord.ext import commands
 
-from .googledocs.zrl import ZrlSignups, ZrlTeam
+from .googledocs.zrl import ZrlSignups, ZrlTeam, GetZwiftIdFromSheet
 from .googledocs.ttt_sheet import FindTttTeam
 from . import zwift
 from .zwift import Event
@@ -99,7 +99,7 @@ async def zrl(ctx):
     await ctx.send(message)
 
 @bot.command(name='ttt-team', help='Shows the current ttt-team <name>')
-async def events(ctx,*args):
+async def events(ctx, *args):
     if len(args) == 0:
         teams = []
         for i in range(1,6):
@@ -111,7 +111,7 @@ async def events(ctx,*args):
     await ctx.send(message)
 
 @bot.command(name='zrl-team', help='Shows the zrl-team <teamtag> "full"')
-async def events(ctx,*args):
+async def events(ctx, *args):
     if len(args) != 1:
         if len(args) == 2 and args[1] == 'full':
             message = '```' + ZrlTeam(teamtag=args[0], full=True) + '```'
@@ -120,3 +120,19 @@ async def events(ctx,*args):
     else:
         message = '```' + ZrlTeam(teamtag=args[0]) + '```'
     await ctx.send(message)
+
+@bot.command(name='zwiftid', help='Searches zwiftid of name')
+async def events(ctx, *args):
+    if len(args) == 0:
+        message = '```Please type in !zwiftid <name>```'
+    else:
+        searchname= ' '.join(args)
+        zwiftid, nrfound = GetZwiftIdFromSheet(name=searchname)
+        if nrfound == 1:
+            message = '```Zwiftid for ' + searchname + ':\n' + zwiftid + \
+                    "\nCheck " + searchname + "'s profile on Zwiftpower:```\n" \
+                    "<https://zwiftpower.com/profile.php?z=" + zwiftid + ">"
+        else:
+            message = '```Zwiftid for ' + searchname + ':\n' + zwiftid + ' ' + '```'
+    await ctx.send(message)
+

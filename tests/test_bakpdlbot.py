@@ -8,8 +8,9 @@ from click.testing import CliRunner
 
 from bakpdlbot import bakpdlbot
 from bakpdlbot import cli
+from bakpdlbot.googledocs.main import MakeSheetConnection
 from bakpdlbot.googledocs.ttt_sheet import FindTttTeam
-from bakpdlbot.googledocs.zrl import ZrlSignups, ZrlTeam
+from bakpdlbot.googledocs.zrl import ZrlSignups, ZrlTeam, GetZwiftIdFromSheet
 
 
 class TestBakpdlbot(unittest.TestCase):
@@ -51,3 +52,12 @@ class TestBakpdlbot(unittest.TestCase):
     def test_range(self):
         for i in range(1,19):
             print(i)
+
+
+    def test_google_connection(self):
+        service = MakeSheetConnection()
+
+    def test_zwiftidfromsheet(self):
+        zwiftid = GetZwiftIdFromSheet(name='Paul')
+        expectedid = '399078'
+        self.assertEqual(zwiftid, expectedid, 'Zwift ids not equal')
