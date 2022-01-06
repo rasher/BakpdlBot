@@ -16,6 +16,7 @@ requirements = [
         'python-dotenv~=0.19.2',
         'google-api-python-client~=1.12.8',
         'google-auth-oauthlib~=0.4.1',
+        'oauth2client~=4.1.3',
         'tabulate~=0.8.9',
         'ago~=0.0.93',
         'requests~=2.25.1',
