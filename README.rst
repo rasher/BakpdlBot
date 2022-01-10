@@ -28,6 +28,15 @@ Features
 
 * TODO
 
+Google Credentials
+------------------
+
+Setup a project with API access as described in https://developers.google.com/docs/api/quickstart/python. Store your credentials (client_secret_*) as bakpdlbot/googledocs/credentials.json 
+
+Run the following command:
+
+    google-oauthlib-tool --client-secrets bakpdlbot/googledocs/credentials.json --credentials bakpdlbot/googledocs/token.json --save --scope https://www.googleapis.com/auth/spreadsheets.readonly
+
 Credits
 -------
 
