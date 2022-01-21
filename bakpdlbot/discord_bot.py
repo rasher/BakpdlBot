@@ -7,7 +7,7 @@ bot.EXTENSIONS = (
     'bakpdlbot.simple',
     'bakpdlbot.sheet',
     'bakpdlbot.zwift',
-    'bakpdlbot.zp',
+    # 'bakpdlbot.zp',
     'bakpdlbot.admin'
 )
 
