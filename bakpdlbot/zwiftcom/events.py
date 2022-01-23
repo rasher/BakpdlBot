@@ -1,11 +1,13 @@
 import re
+import logging
 from abc import ABC
 
 import pendulum
 import requests
 
-from .const import worlds, routes
+from .const import worlds, routes, makuri_routes
 
+logger = logging.getLogger(__name__)
 
 def format_timestamp(v):
     return pendulum.parse(v)
@@ -32,11 +34,22 @@ class Eventish(ABC):
 
     @property
     def map(self):
-        return worlds.get(self.map_id, 'Unknown')
+        mapname = worlds.get(self.map_id)
+        if mapname is None and self.route_id in makuri_routes:
+            logger.info("Using hard-coded map Makuri Islands for %s", self.route_id)
+            mapname = 'Makuri Islands'
+        elif mapname is None:
+            logger.warning("Unknown map id: %s", self.map_id)
+            mapname = 'Unknown'
+        return mapname
 
     @property
     def route(self):
-        return routes.get(self.route_id, 'Unknown')
+        route = routes.get(self.route_id)
+        if route is None:
+            logger.warning("Unknown route id: %s", self.route_id)
+            route = 'Unknown'
+        return route
 
     @property
     def powerups(self):

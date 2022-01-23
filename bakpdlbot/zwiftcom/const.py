@@ -62,6 +62,7 @@ routes = {
     1433431343: 'La Reine',
     1453570384: 'Neokyo All-Nighter',
     1454553567: 'Kappa Quest Reverse',
+    1457923570: 'Twilight Harbor',
     1475638265: 'The Uber Pretzel',
     1509089537: 'Astoria Line 8',
     1545087483: 'Cobbled Climbs',
@@ -153,6 +154,7 @@ routes = {
     3694952104: 'Chili Pepper Reverse',
     3701568815: 'Road to Ruins',
     3707791029: 'Surrey Hills',
+    3742187716: 'Castle to Castle',
     3748780161: 'Zwift Medio Fondo',
     3774003351: 'LaGuardia Loop Reverse',
     3801241714: 'Lutscher CCW',
@@ -177,3 +179,10 @@ routes = {
     4240327959: '11.1 Ocean Blvd',
     4263172118: 'Three Sisters Reverse'
 }
+
+makuri_routes = (
+    3603635554, 1562187590, 3691918883, 525689100, 3282611437, 2653858696,
+    3523806426, 3379779247, 1454553567, 3367186349, 1941800093, 2980619755,
+    246712730, 1127056801, 1453570384, 2896159042, 3302953739, 3356878261,
+    3407362320, 3565430790, 3914529041, 1457923570, 3742187716
+)
