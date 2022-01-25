@@ -1,4 +1,5 @@
 import re
+from datetime import timedelta
 
 import ago
 import discord
@@ -27,6 +28,7 @@ async def event_embed(message, event):
             .add_field(name='Start',
                        value="{:ddd MMM Do H:mm zz}".format(start.in_timezone(TIMEZONE)))
     )
+    embed.description = 'https://zwiftpower.com/events.php?zid={0.id}'.format(event)
 
     if event.distance_in_meters:
         embed.add_field(name='Distance', value='{:.1f} km'.format(event.distance_in_meters / 1000))
@@ -70,8 +72,7 @@ class Zwift(commands.Cog):
             return
         eventlink = re.compile(
             r'https://www.zwift.com/.*events/.*view/(?P<eid>[0-9]+)(?:\?eventSecret=(?P<secret>[0-9a-z]+))?')
-        m = eventlink.search(message.content)
-        if m:
+        for m in eventlink.finditer(message.content):
             eid = int(m.group('eid'))
             secret = m.group('secret')
             event = zwiftcom.get_event(eid, secret)
