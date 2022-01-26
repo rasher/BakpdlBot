@@ -1,14 +1,22 @@
+import abc
+import contextlib
+import logging
 import re
-import sys
 import time
 import traceback
 
 import demjson
-from requests import Response
-from requests_html import HTMLSession
+import requests_html
+from requests import Response, Session
+
+logger = logging.getLogger(__name__)
 
 
-class Fetchable:
+def html(resp: Response):
+    return requests_html.HTML(url=resp.url, html=resp.content)
+
+
+class Fetchable(abc.ABC):
 
     def __init__(self, scraper):
         self.scraper = scraper
@@ -20,6 +28,11 @@ class Fetchable:
         elem = self._get(selector)
         if elem:
             return elem.text.strip()
+
+    @abc.abstractmethod
+    @property
+    def html(self):
+        pass
 
 
 class Rider:
@@ -35,13 +48,21 @@ class Rider:
 
 
 class Race(Fetchable):
-    URL = 'https://zwiftpower.com/events.php?zid=2350665'
+    URL = 'https://zwiftpower.com/events.php?zid={rid}'
     URL_SIGNUPS = 'https://zwiftpower.com/cache3/results/{rid}_signups.json'
 
     def __init__(self, rid, scraper):
         super().__init__(scraper)
         self.rid = rid
         self._signups = None
+        self._html = None
+
+    @property
+    def html(self):
+        if not self._html:
+            resp = self.scraper.get_url(self.URL.format(rid=self.rid))
+            self._html = html(resp)
+        return self._html
 
     @property
     def signups(self):
@@ -53,8 +74,8 @@ class Race(Fetchable):
 
 
 class Team(Fetchable):
-    URL = 'https://www.zwiftpower.com/team.php?id=%d'
-    RIDERS = 'https://www.zwiftpower.com/api3.php?do=team_riders&id=%d&_=%d'
+    URL = 'https://zwiftpower.com/team.php?id=%d'
+    RIDERS = 'https://zwiftpower.com/api3.php?do=team_riders&id=%d&_=%d'
 
     def __init__(self, tid, scraper):
         super().__init__(scraper)
@@ -70,7 +91,7 @@ class Team(Fetchable):
     def html(self):
         if not self._html:
             resp = self.scraper.get_url(self.url)
-            self._html = resp.html
+            self._html = html(resp)
         return self._html
 
     @property
@@ -110,7 +131,7 @@ class Team(Fetchable):
 
 
 class Profile(Fetchable):
-    URL_PROFILE = 'https://www.zwiftpower.com/profile.php?z={pid}'
+    URL_PROFILE = 'https://zwiftpower.com/profile.php?z={pid}'
     URL_RACES = 'https://zwiftpower.com/cache3/profile/{pid}_all.json'
     URL_CP = 'https://zwiftpower.com/api3.php?do=critical_power_profile&zwift_id={pid}&zwift_event_id=&type={type}'
 
@@ -130,7 +151,7 @@ class Profile(Fetchable):
     def html(self):
         if not self._html:
             resp = self.scraper.get_url(self.url)
-            self._html = resp.html
+            self._html = html(resp)
         return self._html
 
     @property
@@ -165,6 +186,7 @@ class Profile(Fetchable):
         if not self._races:
             url = self.URL_RACES.format(pid=self.pid)
             self._races = self.scraper.get_url(url).json()['data']
+            self._races = filter(lambda e: e['event_date'] != '', self._races)
         return self._races
 
     @property
@@ -206,6 +228,14 @@ class Profile(Fetchable):
 
     @property
     def power_profile(self):
+        """
+        Power profile data from the User front-page, containing 15s, 60s, 5m and 20m power.
+        It is not obvious whether this is 30 or 90 day data.
+
+        See also :meth:`cp_watts` and :meth:`cp_wkg`
+        :return: A dict of the form {'wkg':{15:1000,60:700,300:350,1200:270},'watt':{...}}
+        :rtype: dict
+        """
         try:
             sc = next(filter(lambda s: 'function load_profile_spider()' in s.text, self.html.find('script')))
             decoded = [self._decode_spider(x) for x in re.findall(r'{ mean:[^}]* }', sc.text)]
@@ -232,7 +262,10 @@ class Profile(Fetchable):
             }
 
     def __str__(self):
-        return "{0.name} ({0.cat}) - {0.rank} {0.power_profile}".format(self)
+        return "{0.name} ({0.cat}) <{0.pid}>".format(self)
+
+    def __repr__(self):
+        return "<{} pid={}>".format(type(self).__name__, self.pid)
 
     @staticmethod
     def _decode_spider(x):
@@ -254,22 +287,27 @@ class Scraper:
     HOST = 'https://zwiftpower.com'
     ROOT = '/'
 
-    def __init__(self, username, password, sleep=None):
+    def __init__(self, username: str, password: str, sleep: float = None, session: Session = None):
         self.sleep = self.DEFAULT_SLEEP if sleep is None else sleep
-        self.session = HTMLSession()
-        if hasattr(self.session, 'cache_disabled'):
-            with self.session.cache_disabled():
-                self._login(username, password)
-        else:
-            self._login(username, password)
+        self.session = session if session is not None else Session()
+        self.session.headers.update({'User-Agent': requests_html.user_agent()})
+        self._username = username
+        self._password = password
+        self._login()
 
-    def get_url(self, url: str) -> Response:
+    def get_url(self, url: str, is_login=False) -> Response:
         resp = self.session.get(url)
+        resp.raise_for_status()
+        if not is_login and not Scraper._is_logged_in(resp):
+            logger.info("Logged out")
+            self._login()
+            resp = self.session.get(url)
+            resp.raise_for_status()
         if not getattr(resp, 'from_cache', False):
-            sys.stderr.write("CACHE MISS: %s\n" % url)
+            logger.debug("CACHE MISS: %s" % url)
             time.sleep(self.sleep)
         else:
-            sys.stderr.write("CACHE HIT:  %s\n" % url)
+            logger.debug("CACHE HIT:  %s" % url)
         return resp
 
     def profile(self, pid: int) -> Profile:
@@ -281,25 +319,39 @@ class Scraper:
     def race(self, rid: int) -> Race:
         return Race(rid, scraper=self)
 
-    def _login(self, username, password):
-        login_form_resp = self.get_url(self.HOST + self.ROOT)
-        form = login_form_resp.html.find('form#login', first=True)
-        data = {}
-        for inp in form.find('input'):
-            data[inp.attrs['name']] = inp.attrs.get('value', None)
-        del(data['autologin'])
-        del(data['viewonline'])
-        data['username'] = username
-        data['password'] = password
-        action = form.attrs['action']
+    def _login(self):
+        logger.debug("Logging in")
+        if hasattr(self.session, 'cache_disabled'):
+            logger.debug("Disabling cache")
+            ctx = self.session.cache_disabled
+        else:
+            ctx = contextlib.nullcontext
 
-        signon_resp = self.session.post(self.HOST + '/' + action, data)
-        if signon_resp.html.find('form#login', first=True) is not None:
-            raise Exception("Not logged in")
+        with ctx():
+            logger.debug("Loading Zwiftpower Frontpage")
+            frontpage_resp = self.get_url(self.HOST + self.ROOT, True)
+            form = html(frontpage_resp).find('form#login', first=True)
+            login_link = form.find('a')[0]
+            zwift_login_url = login_link.attrs['href']
 
+            logger.debug("Loading Zwift login <%s>", zwift_login_url)
+            login_resp = self.get_url(zwift_login_url, True)
+            form = html(login_resp).find('form#form', first=True)
+            data = {}
+            for inp in form.find('input'):
+                data[inp.attrs['name']] = inp.attrs.get('value', None)
+            del (data['rememberMe'])
+            data['username'] = self._username
+            data['password'] = self._password
+            action = form.attrs['action'].strip()
 
-if __name__ == '__main__':
-    import os
-    s = Scraper(sleep=1.0, username=os.environ.get('ZP_USER', ''), password=os.environ.get('ZP_PASS', ''))
-    me = s.profile(514482)
-    print("{p.name}: {p.height} cm, {p.weight} kg".format(p=me))
+            logger.debug("Submitting %r to %s", data, action)
+
+            signon_resp = self.session.post(action, data)
+            signon_resp.raise_for_status()
+            if not self._is_logged_in(signon_resp):
+                raise Exception("Could not log in")
+
+    @staticmethod
+    def _is_logged_in(resp: Response):
+        return html(resp).find('form#login', first=True) is None
