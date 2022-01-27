@@ -29,11 +29,6 @@ class Fetchable(abc.ABC):
         if elem:
             return elem.text.strip()
 
-    @abc.abstractmethod
-    @property
-    def html(self):
-        pass
-
 
 class Rider:
     """
@@ -170,14 +165,18 @@ class Profile(Fetchable):
 
     @property
     def ftp(self):
-        tag = self.html.xpath("//th[normalize-space() = 'FTP'][1]/following-sibling::td[1]")[0]
-        # 220w ~ 86kg
-        return int(tag.text.strip().split('w', 1)[0])
+        taglist = self.html.xpath("//th[normalize-space() = 'FTP'][1]/following-sibling::td[1]")
+        if len(taglist) == 1:
+            # 220w ~ 86kg
+            return int(taglist[0].text.strip().split('w', 1)[0])
+        else:
+            logger.warning("Could not find ftp for %s", self.pid)
+            return None
 
     @property
     def punch(self):
         s = self._get_text('#table_scroll_overview > div.btn-toolbar > div.pull-right > div.progress > div.progress-bar > span')
-        m = re.search('Punch: (?P<punch>[0-9\.]*)%', s)
+        m = re.search('Punch:\s*(?P<punch>[0-9\.]*)%', s)
         if m:
             return float(m.group('punch'))
 
@@ -186,7 +185,7 @@ class Profile(Fetchable):
         if not self._races:
             url = self.URL_RACES.format(pid=self.pid)
             self._races = self.scraper.get_url(url).json()['data']
-            self._races = filter(lambda e: e['event_date'] != '', self._races)
+            self._races = list(filter(lambda e: e['event_date'] != '', self._races))
         return self._races
 
     @property
@@ -293,14 +292,16 @@ class Scraper:
         self.session.headers.update({'User-Agent': requests_html.user_agent()})
         self._username = username
         self._password = password
-        self._login()
 
     def get_url(self, url: str, is_login=False) -> Response:
         resp = self.session.get(url)
         resp.raise_for_status()
         if not is_login and not Scraper._is_logged_in(resp):
             logger.info("Logged out")
-            self._login()
+            if hasattr(resp, 'cache_key'):
+                # If we're using requests-cache, evict the logged-out response
+                self.session.cache.delete(resp.cache_key)
+            self.login()
             resp = self.session.get(url)
             resp.raise_for_status()
         if not getattr(resp, 'from_cache', False):
@@ -319,7 +320,7 @@ class Scraper:
     def race(self, rid: int) -> Race:
         return Race(rid, scraper=self)
 
-    def _login(self):
+    def login(self):
         logger.debug("Logging in")
         if hasattr(self.session, 'cache_disabled'):
             logger.debug("Disabling cache")
