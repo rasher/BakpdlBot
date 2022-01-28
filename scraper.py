@@ -287,6 +287,8 @@ class Scraper:
     ROOT = '/'
 
     def __init__(self, username: str, password: str, sleep: float = None, session: Session = None):
+        if not all([username, password]):
+            raise Exception("Username or password empty")
         self.sleep = self.DEFAULT_SLEEP if sleep is None else sleep
         self.session = session if session is not None else Session()
         self.session.headers.update({'User-Agent': requests_html.user_agent()})
@@ -294,6 +296,7 @@ class Scraper:
         self._password = password
 
     def get_url(self, url: str, is_login=False) -> Response:
+        logger.debug("GET %s", url)
         resp = self.session.get(url)
         resp.raise_for_status()
         if not is_login and not Scraper._is_logged_in(resp):
