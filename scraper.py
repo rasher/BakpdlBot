@@ -4,6 +4,7 @@ import logging
 import re
 import time
 import traceback
+from typing import Iterator
 
 import demjson
 import requests_html
@@ -31,56 +32,72 @@ class Fetchable(abc.ABC):
 
 
 class Rider:
-    """
-    A rider is a member of a team. A rider has some base data, but also a full Profile
-    """
-    def __init__(self, rider_data, scraper):
+    def __init__(self, rider_data, scraper, container):
         self.data = rider_data
         self.profile = Profile(self.zwid, scraper=scraper)
+        self.container = container
+
+    @property
+    def id(self):
+        return self.zwid
 
     def __getattr__(self, item):
         return self.data.get(item, None)
 
+    def __repr__(self):
+        return "<Rider id={0.id}, name='{0.name}'>".format(self)
+
+
+class Member(Rider):
+    """
+    A member of a team. A member has some base data, but also a full Profile
+    """
+    pass
+
+
+class Entrant(Rider):
+    pass
+
 
 class Race(Fetchable):
-    URL = 'https://zwiftpower.com/events.php?zid={rid}'
-    URL_SIGNUPS = 'https://zwiftpower.com/cache3/results/{rid}_signups.json'
+    URL = 'https://zwiftpower.com/events.php?zid={id}'
+    URL_SIGNUPS = 'https://zwiftpower.com/cache3/results/{id}_signups.json'
 
-    def __init__(self, rid, scraper):
+    def __init__(self, id_, scraper):
         super().__init__(scraper)
-        self.rid = rid
+        self.id = id_
         self._signups = None
         self._html = None
 
     @property
     def html(self):
         if not self._html:
-            resp = self.scraper.get_url(self.URL.format(rid=self.rid))
+            resp = self.scraper.get_url(self.URL.format(id=self.id))
             self._html = html(resp)
         return self._html
 
     @property
-    def signups(self):
+    def signups(self) -> Iterator[Entrant]:
         if not self._signups:
-            url = self.URL_SIGNUPS.format(rid=self.rid)
+            url = self.URL_SIGNUPS.format(id=self.id)
             self._signups = self.scraper.get_url(url).json()
         for entrant in self._signups['data']:
-            yield Rider(entrant, scraper=self.scraper)
+            yield Entrant(entrant, scraper=self.scraper, container=self)
 
 
 class Team(Fetchable):
-    URL = 'https://zwiftpower.com/team.php?id=%d'
-    RIDERS = 'https://zwiftpower.com/api3.php?do=team_riders&id=%d&_=%d'
+    URL = 'https://zwiftpower.com/team.php?id={id}'
+    RIDERS = 'https://zwiftpower.com/api3.php?do=team_riders&id={id}&_={rand}'
 
-    def __init__(self, tid, scraper):
+    def __init__(self, id_, scraper):
         super().__init__(scraper)
-        self.tid = tid
+        self.id = id_
         self._html = None
         self._riders_json = None
 
     @property
     def url(self):
-        return self.URL % self.tid
+        return self.URL.format(id=self.id)
 
     @property
     def html(self):
@@ -94,15 +111,15 @@ class Team(Fetchable):
         if not self._riders_json:
             t = time.time()
             t -= t % 3600
-            url = self.RIDERS % (self.tid, t)
+            url = self.RIDERS.format(id=self.id, rand=t)
             resp = self.scraper.get_url(url)
             self._riders_json = resp.json()
         return self._riders_json
 
     @property
-    def riders(self):
+    def members(self) -> Iterator[Member]:
         for r in self.riders_json['data']:
-            yield Rider(r, scraper=self.scraper)
+            yield Member(r, scraper=self.scraper, container=self)
 
     @property
     def name(self):
@@ -126,13 +143,13 @@ class Team(Fetchable):
 
 
 class Profile(Fetchable):
-    URL_PROFILE = 'https://zwiftpower.com/profile.php?z={pid}'
-    URL_RACES = 'https://zwiftpower.com/cache3/profile/{pid}_all.json'
-    URL_CP = 'https://zwiftpower.com/api3.php?do=critical_power_profile&zwift_id={pid}&zwift_event_id=&type={type}'
+    URL_PROFILE = 'https://zwiftpower.com/profile.php?z={id}'
+    URL_RACES = 'https://zwiftpower.com/cache3/profile/{id}_all.json'
+    URL_CP = 'https://zwiftpower.com/api3.php?do=critical_power_profile&zwift_id={id}&zwift_event_id=&type={type}'
 
-    def __init__(self, pid: int, scraper):
+    def __init__(self, id_: int, scraper):
         super().__init__(scraper)
-        self.pid = pid
+        self.id = id_
         self._html = None
         self._races = None
         self._cp_wkg = None
@@ -140,7 +157,7 @@ class Profile(Fetchable):
 
     @property
     def url(self):
-        return self.URL_PROFILE.format(pid=self.pid)
+        return self.URL_PROFILE.format(id=self.id)
 
     @property
     def html(self):
@@ -170,7 +187,7 @@ class Profile(Fetchable):
             # 220w ~ 86kg
             return int(taglist[0].text.strip().split('w', 1)[0])
         else:
-            logger.warning("Could not find ftp for %s", self.pid)
+            logger.warning("Could not find ftp for %s", self.id)
             return None
 
     @property
@@ -183,7 +200,7 @@ class Profile(Fetchable):
     @property
     def races(self):
         if not self._races:
-            url = self.URL_RACES.format(pid=self.pid)
+            url = self.URL_RACES.format(id=self.id)
             self._races = self.scraper.get_url(url).json()['data']
             self._races = list(filter(lambda e: e['event_date'] != '', self._races))
         return self._races
@@ -214,14 +231,14 @@ class Profile(Fetchable):
     @property
     def cp_watts(self):
         if not self._cp_watts:
-            url_watts = self.URL_CP.format(pid=self.pid, type='watts')
+            url_watts = self.URL_CP.format(id=self.id, type='watts')
             self._cp_watts = self.scraper.get_url(url_watts).json()
         return {effort: {p['x']: p['y'] for p in data} for effort, data in self._cp_watts['efforts'].items()}
 
     @property
     def cp_wkg(self):
         if not self._cp_wkg:
-            url_wkg = self.URL_CP.format(pid=self.pid, type='wkg')
+            url_wkg = self.URL_CP.format(id=self.id, type='wkg')
             self._cp_wkg = self.scraper.get_url(url_wkg).json()
         return {effort: {p['x']: p['y'] for p in data} for effort, data in self._cp_wkg['efforts'].items()}
 
@@ -261,10 +278,10 @@ class Profile(Fetchable):
             }
 
     def __str__(self):
-        return "{0.name} ({0.cat}) <{0.pid}>".format(self)
+        return "{0.name} ({0.cat}) <{0.id}>".format(self)
 
     def __repr__(self):
-        return "<{} pid={}>".format(type(self).__name__, self.pid)
+        return "<{} id={}>".format(type(self).__name__, self.id)
 
     @staticmethod
     def _decode_spider(x):
@@ -300,11 +317,12 @@ class Scraper:
         resp = self.session.get(url)
         resp.raise_for_status()
         if not is_login and not Scraper._is_logged_in(resp):
-            logger.info("Logged out")
+            logger.warning("Logged out - logging in")
             if hasattr(resp, 'cache_key'):
                 # If we're using requests-cache, evict the logged-out response
                 self.session.cache.delete(resp.cache_key)
             self.login()
+            logger.info("Login successful")
             resp = self.session.get(url)
             resp.raise_for_status()
         if not getattr(resp, 'from_cache', False):
@@ -314,17 +332,18 @@ class Scraper:
             logger.debug("CACHE HIT:  %s" % url)
         return resp
 
-    def profile(self, pid: int) -> Profile:
-        return Profile(pid, scraper=self)
+    def profile(self, id_: int) -> Profile:
+        return Profile(id_, scraper=self)
 
-    def team(self, tid: int) -> Team:
-        return Team(tid, scraper=self)
+    def team(self, id_: int) -> Team:
+        return Team(id_, scraper=self)
 
-    def race(self, rid: int) -> Race:
-        return Race(rid, scraper=self)
+    def race(self, id_: int) -> Race:
+        return Race(id_, scraper=self)
 
     def login(self):
         logger.debug("Logging in")
+        # If we're using a cached session, disable it for login
         if hasattr(self.session, 'cache_disabled'):
             logger.debug("Disabling cache")
             ctx = self.session.cache_disabled
