@@ -222,6 +222,11 @@ class Profile(Fetchable):
 
     @property
     def weight(self):
+        taglist = self.html.xpath("//th[normalize-space() = 'FTP'][1]/following-sibling::td[1]")
+        if len(taglist) == 1:
+            # 220w ~ 86kg
+            return float(taglist[0].text.strip().split('~', 1)[1].replace('kg', ''))
+        # Fall back to using weight from latest race
         race = self.latest_race
         if not race:
             return None
