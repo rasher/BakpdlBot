@@ -1,5 +1,9 @@
-from .main import GoogleSheetValues
+from urllib.parse import urlparse, parse_qs
+
 from tabulate import tabulate
+
+from .main import GoogleSheetValues
+
 
 def ZrlSignups():
     """
@@ -48,28 +52,24 @@ def ZrlTeam(teamtag=None,teamsize=12,full=False):
                     return message
         return 'Team ' + teamtag + ' not found'
 
-def GetZwiftIdFromSheet(name=None):
-    '''
 
-    :param name: string input name
-    :return: str zwift id if found
-    :return: amount of found zwift ids
+def GetDiscordNames():
     '''
-    ## sheet connection
+    Return a map of known discord name -> zwift-id from ZRL signups
+    :return:
+    '''
     values = GoogleSheetValues(spreadsheetid='16ip9cd6kpH2fl0dJYlG4UC1VOJL2eYjd8WSSXJMjss4',
-                               range='Backpedal.cc!A:C')
-    zwiftid=[]
-    if not values:
-        return 'Something went wrong connecting to the google sheet'
-    else:
-        for row in values:
-            if len(row) > 2:
-                if name.lower() in row[2].lower():
-                    zwiftid.append(row[0])
-
-    if len(zwiftid) == 1:
-        return zwiftid[0], 1
-    if len(zwiftid) > 1:
-        msg = 'Multiple IDs (' + str(len(zwiftid)) + ') found: ' + ' '.join(zwiftid)
-        return msg, len(zwiftid)
-    return None
+                               range='ZRLS2!Q2:R24')
+    discord_names = {}
+    for row in values:
+        if len(row) > 1 and row[1]:
+            url = row[1]
+            url_parsed = urlparse(url)
+            if not url_parsed or url_parsed.netloc != 'zwiftpower.com':
+                continue
+            qs_parsed = parse_qs(url_parsed.query)
+            if 'z' not in qs_parsed:
+                continue
+            zwift_id = int(qs_parsed["z"][0])
+            discord_names[row[0]] = zwift_id
+    return discord_names

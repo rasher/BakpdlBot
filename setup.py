@@ -21,6 +21,10 @@ requirements = [
         'ago~=0.0.93',
         'requests~=2.25.1',
         'pendulum~=2.1.2',
+        'requests-cache~=0.7.2',
+        'demjson~=2.2.4',
+        'requests-html~=0.6.6',
+        'matplotlib~=3.0.3',
         ]
 
 test_requirements = [ ]
