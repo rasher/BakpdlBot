@@ -68,7 +68,7 @@ class Zwift(commands.Cog):
     async def zwift_link_embed(self, message):
         if message.channel.name not in (
         'bot-test', 'looking-for-company', 'team-bus-event-talk', 'bakpdl-festive-500', 'weekend-bunchy',
-        'backpedal-hc-series'):
+        'backpedal-events'):
             return
         eventlink = re.compile(
             r'https://www.zwift.com/.*events/.*view/(?P<eid>[0-9]+)(?:\?eventSecret=(?P<secret>[0-9a-z]+))?')
