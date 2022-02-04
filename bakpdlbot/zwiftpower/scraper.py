@@ -30,22 +30,30 @@ class Fetchable(abc.ABC):
         if elem:
             return elem.text.strip()
 
+    @property
+    def url(self):
+        return self.URL.format(id=self.id)
+
 
 class Rider:
     def __init__(self, rider_data, scraper, container):
         self.data = rider_data
-        self.profile = Profile(self.zwid, scraper=scraper)
+        self.scraper = scraper
         self.container = container
 
     @property
     def id(self):
         return self.zwid
 
+    @property
+    def profile(self):
+        return self.scraper.profile(self.id)
+
     def __getattr__(self, item):
         return self.data.get(item, None)
 
     def __repr__(self):
-        return "<Rider id={0.id}, name='{0.name}'>".format(self)
+        return "<{0.__class__.__name__} id={0.id}, name='{0.name}'>".format(self)
 
 
 class Member(Rider):
@@ -56,17 +64,24 @@ class Member(Rider):
 
 
 class Entrant(Rider):
-    pass
+    @property
+    def team(self):
+        if self.tid:
+            return self.scraper.team(self.tid)
 
 
 class Race(Fetchable):
     URL = 'https://zwiftpower.com/events.php?zid={id}'
     URL_SIGNUPS = 'https://zwiftpower.com/cache3/results/{id}_signups.json'
+    URL_RESULTS = 'https://zwiftpower.com/cache3/results/{id}_view.json'
+    URL_UNFILTERED = 'https://zwiftpower.com/cache3/results/{id}_zwift.json'
 
     def __init__(self, id_, scraper):
         super().__init__(scraper)
         self.id = id_
         self._signups = None
+        self._results = None
+        self._unfiltered = None
         self._html = None
 
     @property
@@ -77,6 +92,11 @@ class Race(Fetchable):
         return self._html
 
     @property
+    def name(self):
+        return self._get("h3").text.strip()
+
+
+    @property
     def signups(self) -> Iterator[Entrant]:
         if not self._signups:
             url = self.URL_SIGNUPS.format(id=self.id)
@@ -84,10 +104,26 @@ class Race(Fetchable):
         for entrant in self._signups['data']:
             yield Entrant(entrant, scraper=self.scraper, container=self)
 
+    @property
+    def results(self) -> Iterator[Entrant]:
+        if not self._results:
+            url = self.URL_RESULTS.format(id=self.id)
+            self._results = self.scraper.get_url(url).json()
+        for entrant in self._results['data']:
+            yield Entrant(entrant, scraper=self.scraper, container=self)
+
+    @property
+    def unfiltered(self) -> Iterator[Entrant]:
+        if not self._unfiltered:
+            url = self.URL_UNFILTERED.format(id=self.id)
+            self._unfiltered = self.scraper.get_url(url).json()
+        for entrant in self._unfiltered['data']:
+            yield Entrant(entrant, scraper=self.scraper, container=self)
+
 
 class Team(Fetchable):
     URL = 'https://zwiftpower.com/team.php?id={id}'
-    RIDERS = 'https://zwiftpower.com/api3.php?do=team_riders&id={id}&_={rand}'
+    RIDERS = 'https://zwiftpower.com/api3.php?do=team_riders&id={id}'
 
     def __init__(self, id_, scraper):
         super().__init__(scraper)
@@ -109,9 +145,7 @@ class Team(Fetchable):
     @property
     def riders_json(self):
         if not self._riders_json:
-            t = time.time()
-            t -= t % 3600
-            url = self.RIDERS.format(id=self.id, rand=t)
+            url = self.RIDERS.format(id=self.id)
             resp = self.scraper.get_url(url)
             self._riders_json = resp.json()
         return self._riders_json
@@ -140,6 +174,9 @@ class Team(Fetchable):
             'bg': self._get('input#team_bgcolor').attrs['value'],
             'border': self._get('input#team_bdcolor').attrs['value'],
         }
+
+    def __repr__(self):
+        return "<Team id={0.id}, name={0.name}>".format(self)
 
 
 class Profile(Fetchable):
