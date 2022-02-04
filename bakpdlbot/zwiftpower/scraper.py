@@ -320,8 +320,8 @@ class Scraper:
     def get_url(self, url: str, is_login=False) -> Response:
         logger.debug("GET %s", url)
         resp = self.session.get(url)
-        resp.raise_for_status()
-        if not is_login and not Scraper._is_logged_in(resp):
+        # If we get a 403 or a login-page, do the login-dance
+        if not is_login and (resp.status_code == 403 or not Scraper._is_logged_in(resp)):
             logger.warning("Logged out - logging in")
             if hasattr(resp, 'cache_key'):
                 # If we're using requests-cache, evict the logged-out response
@@ -330,6 +330,9 @@ class Scraper:
             logger.info("Login successful")
             resp = self.session.get(url)
             resp.raise_for_status()
+        else:
+            resp.raise_for_status()
+
         if not getattr(resp, 'from_cache', False):
             logger.debug("CACHE MISS: %s" % url)
             time.sleep(self.sleep)
