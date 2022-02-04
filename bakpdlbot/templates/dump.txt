@@ -1,0 +1,4 @@
+{% for r in riders %}
+    {{ r.name }}
+    {{ r.data|pprint }}
+{% endfor %}

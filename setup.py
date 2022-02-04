@@ -25,6 +25,7 @@ requirements = [
         'demjson~=2.2.4',
         'requests-html~=0.6.6',
         'matplotlib~=3.0.3',
+        'jinja2~=3.0.3',
         ]
 
 test_requirements = [ ]
@@ -48,6 +49,7 @@ setup(
     entry_points={
         'console_scripts': [
             'bakpdlbot=bakpdlbot.cli:main',
+            'riderlist=bakpdlbot.riderlist:main',
         ],
     },
     install_requires=requirements,
