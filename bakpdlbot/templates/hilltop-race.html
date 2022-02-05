@@ -51,32 +51,47 @@
                 font-size: 8px;
             }
 
+            .pos {
+                text-align: right;
+            }
+
             .category-A-icon span { background-color: #dc4119; color: white; }
             .category-Aplus-icon span { background-color: #000000; color: white; }
             .category-B-icon span { background-color: #58c34e; color: white; }
             .category-C-icon span { background-color: #3ec0e9; color: black; }
             .category-D-icon span { background-color: #fccf0b; color: white; }
+            .category-E-icon span { background-color: #943e5e; color: white; }
             tr.mismatch td:first-child {
                 border-left: 8px solid darkred;
             }
         </style>
     </head>
     <body>
-        <h1>{{ race.name }}</h1>
+        <h1>{{ race.name }}{% if type == 'race_signups' %} - Signups{% elif type == 'race_results' %} - Results{% endif %}</h1>
         <p>See results <a href="{{ race.url }}">on ZwiftPower</a></p>
         <table>
             <thead>
             <tr>
-                <th>Race Category</th>
-                <th>5min Category</th>
+                {% if type == 'race_results' %}
+                <th class="pos">#</th>
+                {% endif %}
+                <th>Race Cat</th>
+                <th>5min Cat</th>
                 <th>Name</th>
-                <th>90 day 5 minute power</th>
+                <th>90 day 5m</th>
+                {% if type == 'race_results' %}
+                <th>Race 5m</th>
+                {% endif %}
             </tr>
             </thead>
             <tbody>
             {% for r in riders %}
-                {% set signup_cats={1:'A', 2:'B', 3:'C', 4:'D'} %}
-                {% set signup_cat=signup_cats[r.label] %}
+                {% if type == 'race_signups' %}
+                    {% set signup_cats={1:'A', 2:'B', 3:'C', 4:'D'} %}
+                    {% set signup_cat=signup_cats[r.label] %}
+                {% elif type == 'race_results' %}
+                    {% set signup_cat=r.category %}
+                {% endif %}
                 {% if not r.profile.cp_wkg['90days'][300] %}
                     {% set assigned_cat='?' %}
                 {% elif r.profile.cp_wkg['90days'][300] > 5.0 %}
@@ -89,10 +104,16 @@
                     {% set assigned_cat='D' %}
                 {% endif %}
             <tr class="{% if assigned_cat < signup_cat %}mismatch{% endif %}">
+                {% if type == 'race_results' %}
+                <td class="pos">{{ r.position_in_cat }}</td>
+                {% endif %}
                 <td class="category category-{{ signup_cat }}-icon"><span>{{ signup_cat }}</span></td>
                 <td class="category category-{{ assigned_cat }}-icon"><span>{{ assigned_cat }}</span></td>
                 <td><a href="https://zwiftpower.com/profile.php?z={{ r.id }}">{{ r.name }}</a></td>
                 <td>{{ r.profile.cp_wkg['90days'][300] }}</td>
+                {% if type == 'race_results' %}
+                <td>{{ r.wkg300[0] }}</td>
+                {% endif %}
             </tr>
             {% endfor %}
             </tbody>

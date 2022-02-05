@@ -3,7 +3,7 @@ import os
 import sys
 from datetime import timedelta, date, datetime
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 
 import ago
 import click
@@ -116,12 +116,15 @@ class SourceType(click.ParamType):
             if ':' not in value:
                 self.fail('Format must be type:id')
             type_, id_ = value.split(':', 1)
-            types = ('team', 'race_results', 'race_signups', 'rider')
+            types = ('team', 'race_results', 'race_signups', 'riders')
             if type_ not in types:
                 self.fail('Unsupported type {}. Supported source types: {}'.format(type_, ", ".join(types)))
-            return (type_, int(id_))
+            if type_ in ('riders',):
+                return type_, list(map(int, id_.split(',')))
+            else:
+                return type_, int(id_)
         except ValueError:
-            self.fail('ID must be an integer')
+            self.fail('ID must be an integer (comma-separated ints, where supported)')
 
 
 class Getters:
@@ -131,14 +134,19 @@ class Getters:
         team = scraper.team(id_)
         return {
             'team': team,
+            'type': 'team',
             'riders': list(team.members),
         }
 
     @staticmethod
-    def user(scraper: Scraper, id_: int):
-        """Return a single user"""
-        profile = scraper.profile(id_)
-        return {'riders': [profile], 'rider': profile}
+    def riders(scraper: Scraper, ids: List[int]):
+        """Return profile(s) directly"""
+        profiles = [scraper.profile(id_) for id_ in ids]
+        return {
+            'riders': profiles,
+            'type': 'riders',
+            'styles': matplotlib.pyplot.style.available
+        }
 
     @staticmethod
     def race_signups(scraper: Scraper, id_: int):
@@ -146,6 +154,7 @@ class Getters:
         race = scraper.race(id_)
         return {
             'race': race,
+            'type': 'race_signups',
             'riders': list(race.signups)
         }
 
@@ -155,6 +164,7 @@ class Getters:
         race = scraper.race(id_)
         return {
             'race': race,
+            'type': 'race_results',
             'riders': list(race.results)
         }
 
@@ -164,6 +174,7 @@ class Getters:
         race = scraper.race(id_)
         return {
             'race': race,
+            'type': 'race_unfiltered',
             'riders': list(race.unfiltered)
         }
 
@@ -172,7 +183,7 @@ class Getters:
 @click.option('--clear-cache', is_flag=True)
 @click.option('--debug', is_flag=True, help='Enable debug logging')
 @click.option('--output-file', type=click.Path(dir_okay=False, writable=True, allow_dash=True),
-              help='Save output to file')
+              help='Save output to file', default="-")
 @click.option('--zwift-user', envvar='ZWIFT_USER', help='Will use environment ZWIFT_USER if set. Supports .env')
 @click.option('--zwift-pass', envvar='ZWIFT_PASS', help='Will use environment ZWIFT_PASS if set. Supports .env')
 @click.argument('rider_list', type=SourceType())
@@ -185,7 +196,7 @@ def main(clear_cache, debug, zwift_user, zwift_pass, output_file, rider_list, te
     Arguments:
     - RIDERLIST: Source of riders. Supported sources:
         - team:13264
-        - rider:514482
+        - riders:514482,399078
         - race_results:2692522
         - race_unfiltered:2692522
         - race_signups:2692522
