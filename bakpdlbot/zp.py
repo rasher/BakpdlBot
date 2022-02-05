@@ -89,6 +89,7 @@ class ZwiftPower(commands.Cog):
                 fig = make_cp(plots, "90 day critical power", graph_type)
                 fn = "cp_{}.png".format("_".join(map(str, ids)))
                 file = self._fig_to_file(fig, fn)
+                matplotlib.pyplot.close(fig)
             else:
                 file = None
             await ctx.send("\n".join(errors), file=file)
