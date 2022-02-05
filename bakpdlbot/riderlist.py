@@ -1,3 +1,4 @@
+import io
 import logging
 import os
 import sys
@@ -7,13 +8,17 @@ from typing import Dict, List
 
 import ago
 import click
+import matplotlib.pyplot
 import pendulum
 from appdirs import user_cache_dir
 from dotenv import load_dotenv
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
+from matplotlib.figure import Figure
 from requests_cache import CachedSession
 
 from .zwiftpower.scraper import Scraper
+
+from .zp import make_cp
 
 load_dotenv()  # Not a fan of having this dangling here
 
@@ -27,6 +32,42 @@ def filter_catstr(cat):
         30: 'C',
         40: 'D',
     }.get(cat, '?')
+
+
+def fig_to_svg(fig: Figure, prolog: bool = False):
+    # Stupid monkey-patch to prevent xml prolog in output
+    if not prolog:
+        import matplotlib.backends.backend_svg as s
+        if s.svgProlog:
+            s.old_svgProlog = s.svgProlog
+            s.svgProlog = ""
+
+    imgdata = io.StringIO()
+    fig.savefig(imgdata, format='svg')
+    imgdata.seek(0)  # rewind the data
+
+    svg_dta = imgdata.read()  # this is svg data
+    matplotlib.pyplot.close(fig)
+
+    if not prolog:
+        s.svgProlog = s.old_svgProlog
+    return svg_dta
+
+
+def filter_cp_svg(riders, type_, style='default', xkcd=False):
+    plots = []
+    title = "90 day CP"
+    ylabel = type_
+
+    for rider in riders:
+        graph = rider.cp_watts['90days'] if type_ == 'watts' else rider.cp_wkg['90days']
+        plots.append([graph.keys(), graph.values(), rider.name])
+    ctx = matplotlib.pyplot.xkcd if xkcd else lambda: matplotlib.pyplot.style.context(style)
+
+    with ctx():
+        fig = make_cp(plots, title, ylabel)
+
+    return fig_to_svg(fig, False)
 
 
 def flag_unicode(flag: str) -> str:
@@ -229,6 +270,7 @@ def main(clear_cache, debug, zwift_user, zwift_pass, output_file, rider_list, te
     env.filters['ttts'] = filter_ttts
     env.filters['races'] = filter_races
     env.filters['flag2unicode'] = flag_unicode
+    env.filters['cp_svg'] = filter_cp_svg
 
     tpl = env.get_template(template)
     result = tpl.render(**ctx)
