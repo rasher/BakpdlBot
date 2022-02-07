@@ -1,15 +1,20 @@
+import logging
 import re
 from datetime import timedelta
 
 import ago
 import discord
 import pendulum
+from discord import Member
 from discord.ext import commands
 
 from . import zwiftcom
+from .sheet import Sheet
 from .zwiftcom import Event
 
 TIMEZONE = pendulum.timezone("Europe/London")
+
+logger = logging.getLogger(__name__)
 
 
 async def event_embed(message, event):
@@ -78,6 +83,59 @@ class Zwift(commands.Cog):
             event = zwiftcom.get_event(eid, secret)
             embed = await event_embed(message, event)
             await message.reply(embed=embed)
+
+    @commands.command(name='zwiftid', help='Searches zwiftid of name')
+    async def zwift_id(self, ctx, *args):
+        zp = ctx.bot.get_cog('ZwiftPower')
+        results = {}
+        for query, ids in (await self.zwift_id_lookup(ctx, *args)).items():
+            if ids is not None and 0 < len(ids) <= 5:
+                results[query] = " / ".join(["{p.id} ({p.name})".format(p=zp.scraper.profile(id_)) for id_ in ids])
+            else:
+                results[query] = "Not found or too many results"
+        await ctx.send("\n".join(["{0}: {1}".format(q, r) for q, r in results.items()]))
+
+    async def zwift_id_lookup(self, ctx, *args):
+        zp = ctx.bot.get_cog('ZwiftPower')
+        sheet: Sheet = ctx.bot.get_cog('Sheet')
+        converter = commands.MemberConverter()
+
+        results = {}
+        for query in args[:5]:
+            logger.info("Looking up zwift id of <%s>", query)
+
+            # First see if it's simply an int
+            try:
+                results[query] = [int(query)]
+                continue
+            except ValueError as e:
+                pass
+
+            try:
+                member: Member = await converter.convert(ctx, query)
+                query = member.display_name
+                logger.info("Query is a Member - <using %s>", member.display_name)
+            except commands.errors.MemberNotFound:
+                pass
+
+            # See if we can find a match for the string on the ZP team
+            team_member_results = zp.find_team_member(query)
+            if len(team_member_results) > 0:
+                results[query] = [p.id for p in team_member_results]
+                continue
+
+            # See if the input is a Member and look for it int he ZRL sheet
+            # It's slow and not very useful. Skip for now
+            #try:
+            #    member = await converter.convert(ctx, query)
+            #    zid = await sheet.discord_to_zwift_id(ctx, member)
+            #    if zid:
+            #        results[query] = [zid]
+            #        continue
+
+
+            results[query] = None
+        return results
 
 
 def setup(bot):

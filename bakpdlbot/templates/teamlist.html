@@ -1,0 +1,123 @@
+{% set extended_power=false %}
+{% set t=team %}
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>{{ t.name }} riders</title>
+        <style>
+            body {
+                font-family: sans-serif;
+            }
+            table {
+                border-collapse: collapse;
+                margin: 25px 0;
+                font-size: 0.9em;
+                font-family: sans-serif;
+                min-width: 400px;
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+            }
+            table thead tr {
+                background-color: {{ t.colors.bg }};
+                color: {{ t.colors.text }};
+                text-align: left;
+            }
+            table th,
+            table td {
+                padding: 12px 15px;
+            }
+
+            table tbody tr,
+            table thead th {
+                border-bottom: thin solid {{ t.colors.border }};
+            }
+
+            table tbody tr:nth-of-type(even) {
+                background-color: #f3f3f3;
+            }
+
+            table tbody tr:last-of-type {
+                border-bottom: medium solid {{ t.colors.border }};
+            }
+            tbody tr:hover {
+                color: {{ t.colors.text }};
+                background-color: #eeeeee;
+            }
+
+            .category span {
+                font-family: sans-serif;
+                font-weight: bold;
+                color: white;
+                border-radius: 1em;
+                padding: .2em .6em .3em;
+                font-size: 8px;
+            }
+
+            .category-A-icon span { background-color: #dc4119; color: white; }
+            .category-Aplus-icon span { background-color: #000000; color: white; }
+            .category-B-icon span { background-color: #58c34e; color: white; }
+            .category-C-icon span { background-color: #3ec0e9; color: black; }
+            .category-D-icon span { background-color: #fccf0b; color: white; }
+
+            .flag {
+                font-size: 150%;
+            }
+        </style>
+    </head>
+    <body>
+    <h1>{{ t.name }} riders</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>zwid</th>
+                <th>Category</th>
+                <th>Name</th>
+                <th>20m w/kg</th>
+                <th>20m power</th>
+                <th>15s w/kg</th>
+                <th>15s power</th>
+                <th>FTP</th>
+                <th>Weight</th>
+                <th>Height</th>
+                <th>Races</th>
+                <th>TTTs</th>
+                <th>Flag</th>
+                <th>Punch</th>
+                {% if extended_power %}
+                <th>1m w/kg</th>
+                <th>1m power</th>
+                <th>5m w/kg</th>
+                <th>5m power</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+        {%- for r in riders -%}
+            <tr>
+                <td><a href="https://www.zwiftpower.com/profile.php?z={{ r.zwid }}">{{ r.zwid }}</a></td>
+                <td class="category category-{{ r.div|catstr|replace('+', 'plus') }}-icon"><span>{{ r.div|catstr }}</span></td>
+                <td>{{ r.name }}</td>
+                <td>{{ r.h_1200_wkg|default('', true) }}</td>
+                <td>{{ r.h_1200_watts|default('', true)|replace(',', '') }}</td>
+                <td>{{ r.h_15_wkg|default('', true) }}</td>
+                <td>{{ r.h_15_watts|default('', true)|replace(',', '') }}</td>
+                <td>{{ r.ftp[0] }}</td>
+                <td>{{ r.w[0] }}</td>
+                <td>{{ r.profile.height|default('', true) }}</td>
+                <td>{{ r.profile.races|races|list|length }}</td>
+                <td>{{ r.profile.races|ttts|list|length }}</td>
+                <td><span class="flag" title="{{ r.flag }}">{{ r.flag|flag2unicode }}</span></td>
+                <td>{% if r.profile.punch %}{{ r.profile.punch|default('', true) }}%{% endif %}</td>
+                {% if extended_power %}
+                {% set pp=r.profile.power_profile %}
+                <td>{{ pp.wkg.60.value|default('', true) }}</td>
+                <td>{{ pp.watt.60.value|default('', true) }}</td>
+                <td>{{ pp.wkg.300.value|default('', true) }}</td>
+                <td>{{ pp.watt.300.value|default('', true) }}</td>
+                {% endif %}
+            </tr>
+        {%- endfor -%}
+        </tbody>
+    </table>
+    <small>Last updated: {{ now.strftime('%Y-%m-%d %H:%M:%S') }}</small>
+    </body>
+</html>

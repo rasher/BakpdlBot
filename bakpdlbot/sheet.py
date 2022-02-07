@@ -1,13 +1,19 @@
+import logging
+
+from discord import Member
 from discord.ext import commands
 
-from .googledocs.zrl import ZrlSignups, ZrlTeam, GetZwiftIdFromSheet
 from .googledocs.ttt_sheet import FindTttTeam
+from .googledocs.zrl import ZrlSignups, ZrlTeam, GetDiscordNames
+
+logger = logging.getLogger(__name__)
 
 
 class Sheet(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.discord_zid_map = None
 
     @commands.command(name='zrl', help='Shares the information to sign up for Backpedal ZRL teams')
     async def zrl(self, ctx):
@@ -42,20 +48,24 @@ class Sheet(commands.Cog):
             message = '```' + ZrlTeam(teamtag=args[0]) + '```'
         await ctx.send(message)
 
-    @commands.command(name='zwiftid', help='Searches zwiftid of name')
-    async def zwiftid(self, ctx, *args):
-        if len(args) == 0:
-            message = '```Please type in !zwiftid <name>```'
-        else:
-            searchname= ' '.join(args)
-            zwiftid, nrfound = GetZwiftIdFromSheet(name=searchname)
-            if nrfound == 1:
-                message = '```Zwiftid for ' + searchname + ':\n' + zwiftid + \
-                        "\nCheck " + searchname + "'s profile on Zwiftpower:```\n" \
-                        "<https://zwiftpower.com/profile.php?z=" + zwiftid + ">"
-            else:
-                message = '```Zwiftid for ' + searchname + ':\n' + zwiftid + ' ' + '```'
-        await ctx.send(message)
+    async def discord_to_zwift_id(self, ctx, lookfor: Member) -> int:
+        lookup_map = await self.discord_zwift_id_map(ctx)
+        if lookfor.id in lookup_map:
+            return lookup_map[lookfor.id][1]
+
+    async def discord_zwift_id_map(self, ctx):
+        names = GetDiscordNames()
+        converter = commands.MemberConverter()
+        if self.discord_zid_map is None:
+            self.discord_zid_map = {}
+            for name, zwid in names.items():
+                try:
+                    member = await converter.convert(ctx, name)
+                    logger.debug("{0.id} -> {1}".format(member, zwid))
+                    self.discord_zid_map[member.id] = (member, zwid)
+                except commands.errors.MemberNotFound:
+                    logger.debug("Not a member: {}".format(name))
+        return self.discord_zid_map
 
 
 def setup(bot):
