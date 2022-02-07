@@ -8,9 +8,11 @@ from click.testing import CliRunner
 
 from bakpdlbot import bakpdlbot
 from bakpdlbot import cli
+from discord.ext import commands
 from bakpdlbot.googledocs.main import MakeSheetConnection
 from bakpdlbot.googledocs.ttt_sheet import FindTttTeam
-from bakpdlbot.googledocs.zrl import ZrlSignups, ZrlTeam, GetZwiftIdFromSheet
+from bakpdlbot.googledocs.zrl import ZrlSignups, ZrlTeam, GetDiscordNames
+from bakpdlbot.zp import ZwiftPower
 
 
 class TestBakpdlbot(unittest.TestCase):
@@ -57,7 +59,12 @@ class TestBakpdlbot(unittest.TestCase):
     def test_google_connection(self):
         service = MakeSheetConnection()
 
-    def test_zwiftidfromsheet(self):
-        zwiftid = GetZwiftIdFromSheet(name='Paul')
-        expectedid = '399078'
-        self.assertEqual(zwiftid, expectedid, 'Zwift ids not equal')
+    def test_zwiftid(self):
+        # import requests_cache
+        # with requests_cache.disabled():
+        bot = commands.Bot(command_prefix='$')
+        zp = ZwiftPower(bot)
+        zwiftid = zp.find_team_member(q='Mick')
+        expectedid = 399078
+        self.assertEqual(zwiftid[0].id, expectedid, 'Zwift ids not equal')
+

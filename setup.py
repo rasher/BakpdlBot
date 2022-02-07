@@ -24,8 +24,9 @@ requirements = [
         'requests-cache~=0.7.2',
         'demjson~=2.2.4',
         'requests-html~=0.6.6',
-        'matplotlib~=3.0.3',
+        'matplotlib~=3.5.1',
         'jinja2~=3.0.3',
+        'appdirs~=1.4.4',
         ]
 
 test_requirements = [ ]

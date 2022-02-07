@@ -4,6 +4,7 @@ import os
 import typing
 from datetime import timedelta
 from pathlib import Path
+from dotenv import load_dotenv
 
 import ago
 import discord
@@ -60,9 +61,12 @@ class ZwiftPower(commands.Cog):
         cache_dir.mkdir(parents=True, exist_ok=True)
         expire_after = timedelta(hours=12)
         cached = CachedSession(str(cache_dir / 'zp_cache'), expire_after=expire_after)
-        self.scraper = Scraper(sleep=1.0, username=os.environ.get('ZWIFT_USER', ''),
-                               password=os.environ.get('ZWIFT_PASS', ''), session=cached)
-        self.team = self.scraper.team(int(os.environ.get('ZP_TEAM_ID')))
+        load_dotenv()
+        ZWIFTUSER = os.getenv('ZWIFT_USER')
+        ZWIFTPASS = os.getenv('ZWIFT_PASS')
+        ZWIFTTEAM = os.getenv('ZP_TEAM_ID')
+        self.scraper = Scraper(sleep=1.0, username=ZWIFTUSER, password=ZWIFTPASS, session=cached)
+        self.team = self.scraper.team(int(ZWIFTTEAM))
 
     @commands.command(name="cp", help="Show Critical Power")
     async def cp(self, ctx, graph_type: typing.Optional[graph_type_conv], *names):
