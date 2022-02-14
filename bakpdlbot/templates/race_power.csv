@@ -1,0 +1,5 @@
+{%- set times=args.times.split(',')|map('int')|list -%}
+zwid,name,team,{% for time in times %}"{{ time|sdur }} wkg","{{ time|sdur }} w"{% if not loop.last %},{% endif %}{% endfor %}
+{% for p in riders -%}
+{{ p.id }},"{{ p.name }}",{{ p.tname }},{% for time in times %}{% if p.profile.cp_wkg %}{{ p.profile.cp_wkg['90days'][time]|float|round(1) }},{{ p.profile.cp_watts['90days'][time]|float|round(0)|int }}{% else %}0,0{% endif %}{% if not loop.last %},{% endif %}{% endfor %}
+{% endfor -%}
