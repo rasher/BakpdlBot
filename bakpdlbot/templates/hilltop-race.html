@@ -68,14 +68,14 @@
     </head>
     <body>
         <h1>{{ race.name }}{% if type == 'race_signups' %} - Signups{% elif type == 'race_results' %} - Results{% endif %}</h1>
-        <p>See results <a href="{{ race.url }}">on ZwiftPower</a></p>
+        <p>See race <a href="{{ race.url }}">on ZwiftPower</a></p>
         <table>
             <thead>
             <tr>
                 {% if type == 'race_results' %}
                 <th class="pos">#</th>
                 {% endif %}
-                <th>Race Cat</th>
+                <th>Signup Cat</th>
                 <th>5min Cat</th>
                 <th>Name</th>
                 <th>90 day 5m</th>
@@ -92,7 +92,7 @@
                 {% elif type == 'race_results' %}
                     {% set signup_cat=r.category %}
                 {% endif %}
-                {% if not r.profile.cp_wkg['90days'][300] %}
+                {% if not r.profile.cp_wkg or not r.profile.cp_wkg['90days'][300] %}
                     {% set assigned_cat='?' %}
                 {% elif r.profile.cp_wkg['90days'][300] > 5.0 %}
                     {% set assigned_cat='A' %}
@@ -110,7 +110,7 @@
                 <td class="category category-{{ signup_cat }}-icon"><span>{{ signup_cat }}</span></td>
                 <td class="category category-{{ assigned_cat }}-icon"><span>{{ assigned_cat }}</span></td>
                 <td><a href="https://zwiftpower.com/profile.php?z={{ r.id }}">{{ r.name }}</a></td>
-                <td>{{ r.profile.cp_wkg['90days'][300] }}</td>
+                <td>{% if r.profile.cp_wkg %}{{ r.profile.cp_wkg['90days'][300] }}{% endif %}</td>
                 {% if type == 'race_results' %}
                 <td>{{ r.wkg300[0] }}</td>
                 {% endif %}

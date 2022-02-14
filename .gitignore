@@ -108,3 +108,4 @@ ENV/
 # BakPdlBot
 credentials.json
 token.json
+/*.html
