@@ -40,6 +40,7 @@ class Rider:
         self.data = rider_data
         self.scraper = scraper
         self.container = container
+        self._profile = None
 
     @property
     def id(self):
@@ -47,7 +48,9 @@ class Rider:
 
     @property
     def profile(self):
-        return self.scraper.profile(self.id)
+        if self._profile is None:
+            self._profile = self.scraper.profile(self.id)
+        return self._profile
 
     def __getattr__(self, item):
         return self.data.get(item, None)
@@ -275,6 +278,8 @@ class Profile(Fetchable):
         if not self._cp_watts:
             url_watts = self.URL_CP.format(id=self.id, type='watts')
             self._cp_watts = self.scraper.get_url(url_watts).json()
+        if len(self._cp_wkg['efforts']) == 0:
+            return None
         return {effort: {p['x']: p['y'] for p in data} for effort, data in self._cp_watts['efforts'].items()}
 
     @property
@@ -282,6 +287,8 @@ class Profile(Fetchable):
         if not self._cp_wkg:
             url_wkg = self.URL_CP.format(id=self.id, type='wkg')
             self._cp_wkg = self.scraper.get_url(url_wkg).json()
+        if len(self._cp_wkg['efforts']) == 0:
+            return None
         return {effort: {p['x']: p['y'] for p in data} for effort, data in self._cp_wkg['efforts'].items()}
 
     @property
