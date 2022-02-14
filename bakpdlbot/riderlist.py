@@ -193,13 +193,7 @@ class NamedVarType(click.ParamType):
     def convert(self, value, param, ctx):
         if '=' not in value:
             self.fail('Format must be NAME=VALUE')
-        name, value = value.split('=', 1)
-        for f in (int, locale.atof, float, str):
-            try:
-                return name, f(value)
-            except ValueError:
-                pass
-        self.fail('Could not convert NAME=VALUE pair from {}'.format(value))
+        return value.split('=', 1)
 
 
 class SourceType(click.ParamType):
@@ -310,9 +304,9 @@ def main(clear_cache, debug, zwift_user, zwift_pass, tplvars, output_file, rider
         cached.cache.clear()
     s = Scraper(username=zwift_user, password=zwift_pass, sleep=2.0, session=cached)
     ctx = {
+        'scraper': s,
         'now': pendulum.now()
     }
-    ctx.update(getattr(Getters, source)(s, id_))
 
     searchpaths = [
         Path(os.getcwd()),
@@ -329,6 +323,7 @@ def main(clear_cache, debug, zwift_user, zwift_pass, tplvars, output_file, rider
     env.filters['powerbars_svg'] = filter_power_bars
 
     tpl = env.get_template(template)
+    ctx.update(getattr(Getters, source)(s, id_))
     result = tpl.render(args=dict(tplvars), **ctx)
 
     with click.open_file(output_file, mode='w') as f:
