@@ -1,4 +1,5 @@
 import io
+import locale
 import logging
 import os
 import sys
@@ -18,7 +19,7 @@ from requests_cache import CachedSession
 
 from .zwiftpower.scraper import Scraper
 
-from .zp import make_cp
+from .zp import make_cp, ago_fmt
 
 load_dotenv()  # Not a fan of having this dangling here
 
@@ -54,7 +55,7 @@ def fig_to_svg(fig: Figure, prolog: bool = False):
     return svg_dta
 
 
-def filter_cp_svg(riders, type_, style='default', xkcd=False):
+def filter_cp_svg(riders, type_='wkg', style='default') -> str:
     plots = []
     title = "90 day CP"
     ylabel = type_
@@ -62,10 +63,47 @@ def filter_cp_svg(riders, type_, style='default', xkcd=False):
     for rider in riders:
         graph = rider.cp_watts['90days'] if type_ == 'watts' else rider.cp_wkg['90days']
         plots.append([graph.keys(), graph.values(), rider.name])
-    ctx = matplotlib.pyplot.xkcd if xkcd else lambda: matplotlib.pyplot.style.context(style)
+    ctx = matplotlib.pyplot.xkcd if style == 'xkcd' else lambda: matplotlib.pyplot.style.context(style)
 
     with ctx():
         fig = make_cp(plots, title, ylabel)
+
+    return fig_to_svg(fig, False)
+
+
+def filter_power_bars(riders, type_, period, style='default', direction='horizontal', value_labels=True) -> str:
+    import matplotlib.pyplot as plt
+
+    ctx = matplotlib.pyplot.xkcd if style == 'xkcd' else lambda: matplotlib.pyplot.style.context(style)
+    with ctx():
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1)
+        ax.set_title("90 day {} power".format(ago_fmt(period, None)))
+        x = []
+        y = []
+        for rider in riders:
+            graph = rider.cp_watts['90days'] if type_ == 'watts' else rider.cp_wkg['90days']
+            x.append(rider.name)
+            y.append(graph[period])
+        if direction == 'vertical':
+            ax.bar(x, y)
+            ax.set_ylabel(type_)
+        elif direction == 'horizontal':
+            ax.barh(x, y)
+            d = ax.set_xlabel(type_)
+            if value_labels:
+                for rect in ax.patches:
+                    x, y = rect.get_width(), rect.get_y() + rect.get_height() / 2
+                    label = x
+                    plt.annotate(
+                        label,
+                        (x, y),
+                        xytext=(-10, 0),
+                        textcoords='offset points',
+                        va='center',
+                        ha='right'
+                    )
+        fig.tight_layout()
 
     return fig_to_svg(fig, False)
 
@@ -149,6 +187,21 @@ def filter_sdur(s):
     return ago.human(timedelta(seconds=s), past_tense="{}", precision=9, abbreviate=True)
 
 
+class NamedVarType(click.ParamType):
+    name = 'NAME=VALUE'
+
+    def convert(self, value, param, ctx):
+        if '=' not in value:
+            self.fail('Format must be NAME=VALUE')
+        name, value = value.split('=', 1)
+        for f in (int, locale.atof, float, str):
+            try:
+                return name, f(value)
+            except ValueError:
+                pass
+        self.fail('Could not convert NAME=VALUE pair from {}'.format(value))
+
+
 class SourceType(click.ParamType):
     name = 'source'
 
@@ -227,9 +280,10 @@ class Getters:
               help='Save output to file', default="-")
 @click.option('--zwift-user', envvar='ZWIFT_USER', help='Will use environment ZWIFT_USER if set. Supports .env')
 @click.option('--zwift-pass', envvar='ZWIFT_PASS', help='Will use environment ZWIFT_PASS if set. Supports .env')
+@click.option('--var', 'tplvars', multiple=True, default=[], help='Variable to pass to the template, may be repeated', type=NamedVarType())
 @click.argument('rider_list', type=SourceType())
 @click.argument('template')
-def main(clear_cache, debug, zwift_user, zwift_pass, output_file, rider_list, template):
+def main(clear_cache, debug, zwift_user, zwift_pass, tplvars, output_file, rider_list, template):
     """
     Output some sort of rider list with data downloaded from ZwiftPower
 
@@ -271,9 +325,11 @@ def main(clear_cache, debug, zwift_user, zwift_pass, output_file, rider_list, te
     env.filters['races'] = filter_races
     env.filters['flag2unicode'] = flag_unicode
     env.filters['cp_svg'] = filter_cp_svg
+    env.filters['sdur'] = filter_sdur
+    env.filters['powerbars_svg'] = filter_power_bars
 
     tpl = env.get_template(template)
-    result = tpl.render(**ctx)
+    result = tpl.render(args=dict(tplvars), **ctx)
 
     with click.open_file(output_file, mode='w') as f:
         f.write(result)
