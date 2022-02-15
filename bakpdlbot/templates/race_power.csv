@@ -1,5 +1,20 @@
-{%- set times=args.times.split(',')|map('int')|list -%}
-zwid,name,team,{% for time in times %}"{{ time|sdur }} wkg","{{ time|sdur }} w"{% if not loop.last %},{% endif %}{% endfor %}
-{% for p in riders -%}
-{{ p.id }},"{{ p.name }}",{{ p.tname }},{% for time in times %}{% if p.profile.cp_wkg %}{{ p.profile.cp_wkg['90days'][time]|float|round(1) }},{{ p.profile.cp_watts['90days'][time]|float|round(0)|int }}{% else %}0,0{% endif %}{% if not loop.last %},{% endif %}{% endfor %}
-{% endfor -%}
+{% set times=args.times.split(',')|map('int')|list -%}
+{%- for p in riders -%}
+{%- set row={
+    'rider_cat': p.div|catstr,
+    'signup_cat': race.categories[(p.label|int) - 1],
+    'zwid': p.id,
+    'name': p.name,
+    'team': p.tname,
+    } -%}
+{%- for time in times -%}
+    {%- if p.profile.cp_wkg -%}
+        {%- set _=row.__setitem__(time|sdur + ' wkg', p.profile.cp_wkg['90days'][time]) -%}
+        {%- set _=row.__setitem__(time|sdur + ' w', p.profile.cp_watts['90days'][time]) -%}
+    {%- else -%}
+        {%- set _=row.__setitem__(time|sdur + ' wkg', 0) -%}
+        {%- set _=row.__setitem__(time|sdur + ' w', 0) -%}
+    {%- endif -%}
+{%- endfor -%}
+{{ row|csv_dict(write_header=loop.first) }}
+{%- endfor -%}

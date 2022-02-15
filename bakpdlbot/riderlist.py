@@ -1,5 +1,5 @@
+import csv
 import io
-import locale
 import logging
 import os
 import sys
@@ -187,6 +187,19 @@ def filter_sdur(s):
     return ago.human(timedelta(seconds=s), past_tense="{}", precision=9, abbreviate=True)
 
 
+def filter_csv_dict(row, *args, **kwargs):
+    string_io = io.StringIO()
+    if 'write_header' in kwargs:
+        write_header = kwargs['write_header']
+        del(kwargs['write_header'])
+    writer = csv.DictWriter(string_io, row.keys(), *args, **kwargs)
+    if write_header:
+        writer.writeheader()
+    writer.writerow(row)
+    string_io.seek(0)
+    return string_io.read()
+
+
 class NamedVarType(click.ParamType):
     name = 'NAME=VALUE'
 
@@ -321,6 +334,7 @@ def main(clear_cache, debug, zwift_user, zwift_pass, tplvars, output_file, rider
     env.filters['cp_svg'] = filter_cp_svg
     env.filters['sdur'] = filter_sdur
     env.filters['powerbars_svg'] = filter_power_bars
+    env.filters['csv_dict'] = filter_csv_dict
 
     tpl = env.get_template(template)
     ctx.update(getattr(Getters, source)(s, id_))
