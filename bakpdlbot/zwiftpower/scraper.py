@@ -127,7 +127,7 @@ class Race(Fetchable):
     def categories(self) -> List[str]:
         btns = self.html.find('.tab-content #t_results .btn-toolbar .btn-group:nth-child(2) button,'
                               '.tab-content #t_signups .btn-toolbar .btn-group:nth-child(1) button')
-        return [btn.attrs['data-value'] for btn in btns][1:]
+        return [btn.text.strip() for btn in btns][1:]
 
 
 class Team(Fetchable):
