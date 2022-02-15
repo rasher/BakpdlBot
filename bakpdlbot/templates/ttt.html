@@ -1,0 +1,162 @@
+{% set times=args.times.split(',')|map('int')|list %}
+{% set bg='white' %}
+{% set text='black' %}
+{% set border='black' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TTT Rider Stats</title>
+    <style>
+        body {
+            font-family: sans-serif;
+        }
+
+        table {
+            border-collapse: collapse;
+            margin: 25px 0;
+            font-size: 0.9em;
+            font-family: sans-serif;
+            min-width: 400px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+        }
+
+        table thead tr, table tfoot tr {
+            background-color: {{ bg }};
+            color: {{ text }};
+            text-align: left;
+        }
+
+        table th,
+        table td {
+            padding: 12px 15px;
+        }
+
+        table tbody tr,
+        table thead th {
+            border-bottom: thin solid{{ border }};
+        }
+
+        table tbody tr:nth-of-type(even) {
+            background-color: #f3f3f3;
+        }
+
+        table tbody tr:last-of-type {
+            border-bottom: medium solid{{ border }};
+        }
+
+        tbody tr:hover {
+            color: {{ text }};
+            background-color: #eeeeee;
+        }
+
+        .category span {
+            font-family: sans-serif;
+            font-weight: bold;
+            color: white;
+            border-radius: 1em;
+            padding: .2em .6em .3em;
+            font-size: 8px;
+        }
+
+        .category-A-icon span {
+            background-color: #dc4119;
+            color: white;
+        }
+
+        .category-Aplus-icon span {
+            background-color: #000000;
+            color: white;
+        }
+
+        .category-B-icon span {
+            background-color: #58c34e;
+            color: white;
+        }
+
+        .category-C-icon span {
+            background-color: #3ec0e9;
+            color: black;
+        }
+
+        .category-D-icon span {
+            background-color: #fccf0b;
+            color: white;
+        }
+
+        .flag {
+            font-size: 150%;
+        }
+    </style>
+</head>
+<body>
+    <h1>TTT key numbers</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>zwid</th>
+                <th>Cat</th>
+                <th>Name</th>
+                <th>Weight</th>
+                <th>Height</th>
+                <th>TTTs</th>
+                <th>FTP</th>
+                <th>95% 20m</th>
+                {% for time in times %}
+                    <th>{{ time|sdur }} wkg</th>
+                    <th>{{ time|sdur }} w</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+        {%- set mins_wkg={} -%}
+        {%- set mins_w={} -%}
+        {% for time in times %}
+            {% set dummy=mins_wkg.__setitem__(time, 99) %}
+            {% set dummy=mins_w.__setitem__(time, 9999) %}
+        {% endfor %}
+        {%- for p in riders -%}
+            {% set pp=p.power_profile %}
+            <tr>
+                <td><a href="https://www.zwiftpower.com/profile.php?z={{ p.id }}">{{ p.id }}</a></td>
+                <td class="category category-{{ p.cat|replace('+', 'plus') }}-icon"><span>{{ p.cat }}</span></td>
+                <td>{{ p.name }}</td>
+                <td>{{ p.weight|default('', true) }}</td>
+                <td>{{ p.height|default('', true) }}</td>
+                <td>{{ p.races|ttts|list|length }}</td>
+                <td>{{ p.ftp }}</td>
+                <td>{{ (0.95 * (p.cp_watts['90days'][1200]|float))|round(0)|int }}</td>
+                {% for time in times %}
+                <td>{{ (1.00 * (p.cp_wkg['90days'][time]|float))|round(1) }}</td>
+                    {% if p.cp_wkg['90days'][time]|float < mins_wkg[time] %}
+                        {% set dummy=mins_wkg.__setitem__(time, p.cp_wkg['90days'][time]|float) %}
+                    {% endif %}
+                    <td>{{ (1.00 * (p.cp_watts['90days'][time]|float))|round(-1, 'floor')|int }}</td>
+                    {% if p.cp_watts['90days'][time]|float < mins_w[time] %}
+                        {% set dummy=mins_w.__setitem__(time, p.cp_watts['90days'][time]|float) %}
+                    {% endif %}
+                {% endfor %}
+            </tr>
+        {%- endfor -%}
+        </tbody>
+        <tfoot style="display:none">
+            <tr>
+            <th colspan="7">Minimum</th>
+            {% for time in times %}
+                <td>{{ (1.00 * mins_wkg[time])|round(1) }}</td>
+                <!--<td>{{ (1.00 * mins_w[time])|round(0) }}</td>-->
+            {% endfor %}
+            <tr>
+        </tfoot>
+    </table>
+    {% set style='seaborn' %}
+    {{ riders|cp_svg('watts', style=style) }}
+    {% for time in times %}
+        {{ riders|powerbars_svg('wkg', time, style=style, direction='horizontal') }}
+    {% endfor %}
+    <p>
+        <small>Generated: {{ now.strftime('%Y-%m-%d %H:%M:%S') }}</small>
+    </p>
+    </body>
+</html>

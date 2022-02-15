@@ -13,18 +13,12 @@
         <h1>Riders</h1>
         <p>Critical Power graph styles</p>
         <p>Showing {% for rider in riders %}{% if not loop.first %}{% if loop.last %} and {% else %}, {% endif %}{% endif %}<a href="{{ rider.url }}">{{ rider.name }}</a>{% endfor %}</p>
-        <h2>default</h2>
-        {{ riders|cp_svg('w/kg') }}
-        {{ riders|cp_svg('watts') }}
-        {# List from matplotlib.pyplot.style.available #}
-        {% set available_styles=['seaborn-ticks', 'seaborn-pastel', 'seaborn-deep', 'seaborn-whitegrid', 'seaborn-notebook', 'seaborn-paper', 'seaborn', 'seaborn-talk', 'seaborn-poster', 'ggplot', 'Solarize_Light2', 'seaborn-white', 'seaborn-muted', 'fivethirtyeight', 'classic', 'seaborn-bright', 'seaborn-colorblind', 'seaborn-dark-palette', 'tableau-colorblind10', '_classic_test', 'bmh', 'fast', 'dark_background', 'grayscale', 'seaborn-dark', 'seaborn-darkgrid'] %}
+        {# List from matplotlib.pyplot.style.available  + default and xkcd #}
+        {% set available_styles=('default', 'seaborn-ticks', 'seaborn-pastel', 'seaborn-deep', 'seaborn-whitegrid', 'seaborn-notebook', 'seaborn-paper', 'seaborn', 'seaborn-talk', 'seaborn-poster', 'ggplot', 'Solarize_Light2', 'seaborn-white', 'seaborn-muted', 'fivethirtyeight', 'classic', 'seaborn-bright', 'seaborn-colorblind', 'seaborn-dark-palette', 'tableau-colorblind10', '_classic_test', 'bmh', 'fast', 'dark_background', 'grayscale', 'seaborn-dark', 'seaborn-darkgrid', 'xkcd') %}
         {% for style in available_styles %}
             <h2>{{ style }}</h2>
         {{ riders|cp_svg('w/kg', style=style) }}
-        {{ riders|cp_svg('watts', style=style) }}
+        {{ riders|powerbars_svg('watts', 120, style=style) }}
         {% endfor %}
-        <h2>xkcd</h2>
-        {{ riders|cp_svg('w/kg', xkcd=True) }}
-        {{ riders|cp_svg('watts', xkcd=True) }}
     </body>
 </html>

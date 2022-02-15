@@ -4,7 +4,7 @@ import logging
 import re
 import time
 import traceback
-from typing import Iterator
+from typing import Iterator, List
 
 import demjson
 import requests_html
@@ -40,6 +40,7 @@ class Rider:
         self.data = rider_data
         self.scraper = scraper
         self.container = container
+        self._profile = None
 
     @property
     def id(self):
@@ -47,7 +48,9 @@ class Rider:
 
     @property
     def profile(self):
-        return self.scraper.profile(self.id)
+        if self._profile is None:
+            self._profile = self.scraper.profile(self.id)
+        return self._profile
 
     def __getattr__(self, item):
         return self.data.get(item, None)
@@ -119,6 +122,12 @@ class Race(Fetchable):
             self._unfiltered = self.scraper.get_url(url).json()
         for entrant in self._unfiltered['data']:
             yield Entrant(entrant, scraper=self.scraper, container=self)
+
+    @property
+    def categories(self) -> List[str]:
+        btns = self.html.find('.tab-content #t_results .btn-toolbar .btn-group:nth-child(2) button,'
+                              '.tab-content #t_signups .btn-toolbar .btn-group:nth-child(1) button')
+        return [btn.text.strip() for btn in btns][1:]
 
 
 class Team(Fetchable):
@@ -275,6 +284,8 @@ class Profile(Fetchable):
         if not self._cp_watts:
             url_watts = self.URL_CP.format(id=self.id, type='watts')
             self._cp_watts = self.scraper.get_url(url_watts).json()
+        if len(self._cp_wkg['efforts']) == 0:
+            return None
         return {effort: {p['x']: p['y'] for p in data} for effort, data in self._cp_watts['efforts'].items()}
 
     @property
@@ -282,6 +293,8 @@ class Profile(Fetchable):
         if not self._cp_wkg:
             url_wkg = self.URL_CP.format(id=self.id, type='wkg')
             self._cp_wkg = self.scraper.get_url(url_wkg).json()
+        if len(self._cp_wkg['efforts']) == 0:
+            return None
         return {effort: {p['x']: p['y'] for p in data} for effort, data in self._cp_wkg['efforts'].items()}
 
     @property
