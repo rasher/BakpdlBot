@@ -28,12 +28,19 @@ async def event_embed(message, event):
         discord.Embed(title=event.name, url=event.url)
             # .set_image(url=event.image_url)
             .add_field(name='Type', value=event.event_type.lower().replace('_', ' ').title())
-            .add_field(name='Route', value=event.route)
-            .add_field(name='World', value=event.map)
-            .add_field(name='Start',
-                       value="{:ddd MMM Do H:mm zz}".format(start.in_timezone(TIMEZONE)))
     )
     embed.description = 'https://zwiftpower.com/events.php?zid={0.id}'.format(event)
+
+    # Check if subgroups are on separate worlds and/or routes
+    same_world = len(set([sg.map for sg in event.event_subgroups])) == 1
+    same_route = len(set([sg.route for sg in event.event_subgroups])) == 1
+
+    if same_route:
+        embed.add_field(name='Route', value=event.route)
+    if same_world:
+        embed.add_field(name='World', value=event.map)
+
+    embed.add_field(name='Start', value="{:ddd MMM Do H:mm zz}".format(start.in_timezone(TIMEZONE)))
 
     if event.distance_in_meters:
         embed.add_field(name='Distance', value='{:.1f} km'.format(event.distance_in_meters / 1000))
@@ -44,10 +51,15 @@ async def event_embed(message, event):
 
     cats_text = []
     for subgroup in event.event_subgroups:
+        route = "" if same_route else ", {}".format(subgroup.route)
+        world = "" if same_world else " ({})".format(subgroup.map)
         cats_text.append(
-            "{s.event_subgroup_start:H:mm} {emoji} {s.from_pace_value:.1f}-{s.to_pace_value:.1f} w/kg".format(
-                s=subgroup, emoji=cat_emoji[
-                    subgroup.subgroup_label]))
+            "{s.event_subgroup_start:H:mm} {emoji} {s.from_pace_value:.1f}-{s.to_pace_value:.1f} w/kg"
+            "{route}{world}".format(
+                s=subgroup, emoji=cat_emoji[subgroup.subgroup_label],
+                route=route, world=world
+            )
+        )
     embed.add_field(name='Cats', value="\n".join(cats_text), inline=False)
 
     footer = []

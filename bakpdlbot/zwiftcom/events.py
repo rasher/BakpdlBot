@@ -107,7 +107,7 @@ class Event(Eventish):
         return "https://www.zwift.com/events/view/{}".format(self.id)
 
 
-def get_event(eid: int, secret: None) -> Event:
+def get_event(eid: int, secret: str = None) -> Event:
     url = "https://us-or-rly101.zwift.com/api/public/events/{}".format(int(eid))
     if secret is not None:
         params = {'eventSecret': secret}
