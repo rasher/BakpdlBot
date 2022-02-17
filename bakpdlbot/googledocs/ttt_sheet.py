@@ -44,5 +44,5 @@ def FindTttTeam(teamname='BAKPDL 1',teamsize=8):
         return 'No team found with name: ' + teamname
 
 if __name__ == '__main__':
-    msg = findteam()
+    msg = FindTttTeam()
     print(msg)
