@@ -22,7 +22,7 @@ class Sheet(commands.Cog):
         message='```Hey ' + user + '' \
                 '\nZwift Racing League starts january 11th,\n' \
                 + current_signups + ' sign-ups so far! Find the sign-up form at: ' \
-                '```<https://forms.gle/ePGi4XVYoUkg4k6q9>'
+                '```<https://forms.gle/q7jyXNpjMfN7qe6u8>'
         await ctx.send(message)
 
     @commands.command(name='ttt-team', help='Shows the current ttt-team <name>')
