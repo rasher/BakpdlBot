@@ -10,7 +10,7 @@ def ZrlSignups():
     :return: integer, amount of zrl signups
     """
     values = GoogleSheetValues(spreadsheetid='16ip9cd6kpH2fl0dJYlG4UC1VOJL2eYjd8WSSXJMjss4',
-                               range='ZRL S2 Overview!D22')
+                               range='ZRL Overview!D22')
     return values[0][0]
 
 def ZrlTeam(teamtag=None,teamsize=12,full=False):
@@ -31,7 +31,7 @@ def ZrlTeam(teamtag=None,teamsize=12,full=False):
         tableheader = [teamtag + " Name","FTP","wkg"]
 
     values = GoogleSheetValues(spreadsheetid='16ip9cd6kpH2fl0dJYlG4UC1VOJL2eYjd8WSSXJMjss4',
-                               range='ZRLS2 Team Builder!A:V')
+                               range='ZRL Team Builder!A:V')
 
     if not values:
         return 'Something went wrong connecting to the google sheet'
@@ -59,7 +59,7 @@ def GetDiscordNames():
     :return:
     '''
     values = GoogleSheetValues(spreadsheetid='16ip9cd6kpH2fl0dJYlG4UC1VOJL2eYjd8WSSXJMjss4',
-                               range='ZRLS2!Q2:R24')
+                               range='ZRL-signup!Q2:R24')
     discord_names = {}
     for row in values:
         if len(row) > 1 and row[1]:
