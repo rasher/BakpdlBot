@@ -20,9 +20,9 @@ class Sheet(commands.Cog):
         user = str(ctx.author).split('#')[0]
         current_signups = ZrlSignups()
         message='```Hey ' + user + '' \
-                '\nZwift Racing League starts january 11th,\n' \
+                '\nZwift Racing League starts september 13th,\n' \
                 + current_signups + ' sign-ups so far! Find the sign-up form at: ' \
-                '```<https://forms.gle/q7jyXNpjMfN7qe6u8>'
+                '```<https://forms.gle/XAmyvXpv5e72jpkMA>'
         await ctx.send(message)
 
     @commands.command(name='ttt-team', help='Shows the current ttt-team <name>')
