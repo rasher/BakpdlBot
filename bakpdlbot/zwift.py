@@ -43,33 +43,58 @@ async def event_embed(message, event):
     embed.add_field(name='Start', value="{:ddd MMM Do H:mm zz}".format(start.in_timezone(TIMEZONE)))
 
     if event.distance_in_meters:
-        embed.add_field(name='Distance', value='{:.1f} km'.format(event.distance_in_meters / 1000))
+        embed.add_field(name='Custom Distance', value='{:.1f} km'.format(event.distance_in_meters / 1000))
     elif event.duration_in_seconds:
         embed.add_field(name='Duration', value=ago.human(timedelta(seconds=event.duration_in_seconds), past_tense="{}"))
     elif event.laps:
         embed.add_field(name='Laps', value=event.laps)
 
     cats_text = []
+    footer = []
     for subgroup in event.event_subgroups:
         route = "" if same_route else ", {}".format(subgroup.route)
         world = "" if same_world else " ({})".format(subgroup.map)
+
+        cat_rules = ""
+        for rule in subgroup.rules_set:
+            if rule == Event.NO_DRAFTING:
+                cat_rules = '(no draft)'
         cats_text.append(
             "{s.event_subgroup_start:H:mm} {emoji} {s.from_pace_value:.1f}-{s.to_pace_value:.1f} w/kg"
-            "{route}{world}".format(
+            "{route}{world} {cat_rules}".format(
                 s=subgroup, emoji=cat_emoji[subgroup.subgroup_label],
-                route=route, world=world
+                route=route, world=world, cat_rules=cat_rules
             )
         )
     embed.add_field(name='Cats', value="\n".join(cats_text), inline=False)
 
-    footer = []
+    if event.powerups:
+        pus = []
+        for pu in event.powerups:
+            pus.append(f'{pu} - {event.powerups[pu]}%')
+        embed.add_field(name='Powerups', value="\n".join(pus), inline=False)
+
     for rule in event.rules_set:
         if rule == Event.NO_DRAFTING:
             footer.append('no draft')
         elif rule == Event.ALLOWS_LATE_JOIN:
             footer.append('late join')
+        elif rule == Event.NO_ZPOWER:
+            footer.append('no zpower riders')
+        elif rule == Event.NO_POWERUPS:
+            footer.append('no powerups')
+        elif rule == Event.LADIES_ONLY:
+            footer.append('ladies only')
+        elif rule == Event.NO_TT_BIKES:
+            footer.append('no tt bikes')
+
+    if event.category_enforcement:
+        footer.append('category enforcement')
     if 'doubledraft' in event.tags:
         footer.append('doubledraft')
+    if event.jersey_hash is not None:
+        footer.append('fixed jersey')
+
     if footer:
         embed.set_footer(text=", ".join(footer))
 
