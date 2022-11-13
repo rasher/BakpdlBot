@@ -61,7 +61,10 @@ def filter_cp_svg(riders, type_='wkg', style='default') -> str:
     ylabel = type_
 
     for rider in riders:
-        graph = rider.cp_watts['90days'] if type_ == 'watts' else rider.cp_wkg['90days']
+        graph = rider.cp_watts if type_ == 'watts' else rider.cp_wkg
+        if graph is None:
+            continue
+        graph = graph['90days']
         plots.append([graph.keys(), graph.values(), rider.name])
     ctx = matplotlib.pyplot.xkcd if style == 'xkcd' else lambda: matplotlib.pyplot.style.context(style)
 
@@ -82,7 +85,10 @@ def filter_power_bars(riders, type_, period, style='default', direction='horizon
         x = []
         y = []
         for rider in riders:
-            graph = rider.cp_watts['90days'] if type_ == 'watts' else rider.cp_wkg['90days']
+            graph = rider.cp_watts if type_ == 'watts' else rider.cp_wkg
+            if graph is None:
+                continue
+            graph = graph['90days']
             x.append(rider.name)
             y.append(graph[period])
         if direction == 'vertical':
@@ -157,6 +163,14 @@ def is_zrl_ttt(race: Dict) -> bool:
         date(2022,  2,  1), date(2022,  2,  2),  # Week 4
         date(2022,  2, 22), date(2022,  2, 23),  # Week 7
         date(2022,  3, 12), date(2022,  3, 13),  # Playoff TTT
+        # ZRL 21/22 Season 3
+        date(2022,  4, 12), date(2022,  4, 13),  # Week 2
+        date(2022,  5,  3), date(2022,  5,  4),  # Week 5
+        # ZRL 22/23 Round 1
+        date(2022,  9, 27), date(2022,  9, 28),  # Week 3
+        # ZRL 22/23 Round 2
+        date(2022, 11, 15), date(2022, 11, 16),  # Week 2
+        date(2022, 12,  6), date(2022, 12,  7),  # Week 5
     ]
     race_date = datetime.utcfromtimestamp(race['event_date'])
     return race_date.date() in ttt_dates

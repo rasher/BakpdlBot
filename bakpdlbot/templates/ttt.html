@@ -1,4 +1,5 @@
 {% set times=args.times.split(',')|map('int')|list %}
+{% set title=args.title|default('TTT key numbers') %}
 {% set bg='white' %}
 {% set text='black' %}
 {% set border='black' %}
@@ -6,7 +7,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TTT Rider Stats</title>
+    <title>{{ title }}</title>
     <style>
         body {
             font-family: sans-serif;
@@ -85,12 +86,12 @@
         }
 
         .flag {
-            font-size: 150%;
+
         }
     </style>
 </head>
 <body>
-    <h1>TTT key numbers</h1>
+    <h1>{{ title }}</h1>
 
     <table>
         <thead>
@@ -121,11 +122,17 @@
             <tr>
                 <td><a href="https://www.zwiftpower.com/profile.php?z={{ p.id }}">{{ p.id }}</a></td>
                 <td class="category category-{{ p.cat|replace('+', 'plus') }}-icon"><span>{{ p.cat }}</span></td>
-                <td>{{ p.name }}</td>
+                <td>
+                    {% if p.flag %}
+                        <span class="flag" title="{{ p.flag }}">{{ p.flag|flag2unicode }}</span>
+                    {% endif %}
+                    {{ p.name }}
+                </td>
                 <td>{{ p.weight|default('', true) }}</td>
                 <td>{{ p.height|default('', true) }}</td>
                 <td>{{ p.races|ttts|list|length }}</td>
                 <td>{{ p.ftp }}</td>
+                {% if p.cp_watts %}
                 <td>{{ (0.95 * (p.cp_watts['90days'][1200]|float))|round(0)|int }}</td>
                 {% for time in times %}
                 <td>{{ (1.00 * (p.cp_wkg['90days'][time]|float))|round(1) }}</td>
@@ -137,23 +144,30 @@
                         {% set dummy=mins_w.__setitem__(time, p.cp_watts['90days'][time]|float) %}
                     {% endif %}
                 {% endfor %}
+                {% endif %}
             </tr>
         {%- endfor -%}
         </tbody>
-        <tfoot style="display:none">
+        <tfoot style="">
             <tr>
-            <th colspan="7">Minimum</th>
+            <th colspan="8">Minimum</th>
             {% for time in times %}
-                <td>{{ (1.00 * mins_wkg[time])|round(1) }}</td>
-                <!--<td>{{ (1.00 * mins_w[time])|round(0) }}</td>-->
+                <td>{{ (1.00 * (mins_wkg[time]|float))|round(1) }}</td>
+                <td>{{ (1.00 * mins_w[time])|round(-1, 'floor')|int }}</td>
             {% endfor %}
             <tr>
         </tfoot>
     </table>
     {% set style='seaborn' %}
+    <div>
     {{ riders|cp_svg('watts', style=style) }}
+    {{ riders|cp_svg('wkg', style=style) }}
+    </div>
     {% for time in times %}
+    <div>
         {{ riders|powerbars_svg('wkg', time, style=style, direction='horizontal') }}
+        {{ riders|powerbars_svg('watts', time, style=style, direction='horizontal') }}
+    </div>
     {% endfor %}
     <p>
         <small>Generated: {{ now.strftime('%Y-%m-%d %H:%M:%S') }}</small>
