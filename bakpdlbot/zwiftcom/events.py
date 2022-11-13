@@ -29,6 +29,7 @@ class Eventish(ABC):
     ALLOWS_LATE_JOIN = 'ALLOWS_LATE_JOIN'
     NO_TT_BIKES = 'NO_TT_BIKES'
     SHOW_RACE_RESULTS = 'SHOW_RACE_RESULTS'
+    NO_ZPOWER = "ENFORCE_NO_ZPOWER"
 
     formatters = {}
 
