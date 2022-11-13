@@ -12,6 +12,216 @@ from requests import Response, Session
 
 logger = logging.getLogger(__name__)
 
+# Flag<=>Country as used by ZwiftPower. Probably incomplete.
+flags = {
+    'ad': 'Andorra',
+    'ae': 'United Arab Emirates',
+    'af': 'Afghanistan',
+    'ag': 'Antigua and Barbuda',
+    'ai': 'Anguilla',
+    'al': 'Albania',
+    'am': 'Armenia',
+    'ao': 'Angola',
+    'ar': 'Argentina',
+    'as': 'American Samoa',
+    'at': 'Austria',
+    'au': 'Australia',
+    'aw': 'Aruba',
+    'ax': 'Aland Islands',
+    'az': 'Azerbaijan',
+    'ba': 'Bosnia and Herzegovina',
+    'bb': 'Barbados',
+    'bd': 'Bangladesh',
+    'be': 'Belgium',
+    'bf': 'Burkina Faso',
+    'bg': 'Bulgaria',
+    'bh': 'Bahrain',
+    'bj': 'Benin',
+    'bm': 'Bermuda',
+    'bn': 'Brunei Darussalam',
+    'bo': 'Bolivia',
+    'br': 'Brazil',
+    'bs': 'Bahamas',
+    'bt': 'Bhutan',
+    'by': 'Belarus',
+    'bz': 'Belize',
+    'ca': 'Canada',
+    'cg': 'Congo',
+    'ch': 'Switzerland',
+    'ci': "Cote D'Ivoire",
+    'cl': 'Chile',
+    'cm': 'Cameroon',
+    'cn': 'China',
+    'co': 'Colombia',
+    'cr': 'Costa Rica',
+    'cu': 'Cuba',
+    'cw': 'Curacao',
+    'cy': 'Cyprus',
+    'cz': 'Czech Republic',
+    'de': 'Germany',
+    'dj': 'Djibouti',
+    'dk': 'Denmark',
+    'do': 'Dominican Republic',
+    'dz': 'Algeria',
+    'ec': 'Ecuador',
+    'ee': 'Estonia',
+    'eg': 'Egypt',
+    'eh': 'Western Sahara',
+    'es': 'Spain',
+    'et': 'Ethiopia',
+    'fi': 'Finland',
+    'fj': 'Fiji',
+    'fk': 'Falkland Islands',
+    'fm': 'Micronesia',
+    'fo': 'Faroe Islands',
+    'fr': 'France',
+    'ga': 'Gabon',
+    'gb': 'United Kingdom',
+    'gb-eng': 'England',
+    'gb-nir': 'Northern Ireland',
+    'gb-sct': 'Scotland',
+    'gb-wls': 'Wales',
+    'gd': 'Grenada',
+    'ge': 'Georgia',
+    'gf': 'French Guiana',
+    'gg': 'Guernsey',
+    'gh': 'Ghana',
+    'gi': 'Gibraltar',
+    'gl': 'Greenland',
+    'gm': 'Gambia',
+    'gp': 'Guadeloupe',
+    'gr': 'Greece',
+    'gt': 'Guatemala',
+    'gu': 'Guam',
+    'gy': 'Guyana',
+    'hk': 'Hong Kong',
+    'hn': 'Honduras',
+    'hr': 'Croatia',
+    'ht': 'Haiti',
+    'hu': 'Hungary',
+    'id': 'Indonesia',
+    'ie': 'Ireland',
+    'il': 'Israel',
+    'im': 'Isle of Man',
+    'in': 'India',
+    'iq': 'Iraq',
+    'is': 'Iceland',
+    'it': 'Italy',
+    'je': 'Jersey',
+    'jm': 'Jamaica',
+    'jo': 'Jordan',
+    'jp': 'Japan',
+    'ke': 'Kenya',
+    'kg': 'Kyrgyzstan',
+    'km': 'Comoros', 'nu': 'Niue', 'pw': 'Palau',
+    'kn': 'Saint Kitts and Nevis',
+    'kp': 'North Korea',
+    'kr': 'Korea, Republic of',
+    'kw': 'Kuwait',
+    'ky': 'Cayman Islands',
+    'kz': 'Kazakhstan',
+    'la': "Lao People's Dem Repub",
+    'lb': 'Lebanon',
+    'lc': 'Saint Lucia',
+    'li': 'Liechtenstein',
+    'lk': 'Sri Lanka',
+    'lt': 'Lithuania',
+    'lu': 'Luxembourg',
+    'lv': 'Latvia',
+    'ma': 'Morocco',
+    'mc': 'Monaco',
+    'md': 'Moldova',
+    'me': 'Montenegro',
+    'mg': 'Madagascar',
+    'mk': 'Macedonia',
+    'mm': 'Myanmar',
+    'mn': 'Mongolia',
+    'mo': 'Macao',
+    'mp': 'Northern Mariana Islands',
+    'mq': 'Martinique',
+    'ms': 'Montserrat',
+    'mt': 'Malta',
+    'mu': 'Mauritius',
+    'mw': 'Malawi',
+    'mx': 'Mexico',
+    'my': 'Malaysia',
+    'mz': 'Mozambique',
+    'na': 'Namibia',
+    'nc': 'New Caledonia',
+    'nf': 'Norfolk Island',
+    'ng': 'Nigeria',
+    'ni': 'Nicaragua',
+    'nl': 'Netherlands',
+    'no': 'Norway',
+    'np': 'Nepal',
+    'nr': 'Nauru',
+    'nz': 'New Zealand',
+    'om': 'Oman',
+    'pa': 'Panama',
+    'pe': 'Peru',
+    'pf': 'French Polynesia',
+    'pg': 'Papua New Guinea',
+    'ph': 'Philippines',
+    'pk': 'Pakistan',
+    'pl': 'Poland',
+    'pm': 'Saint Pierre and Miquelon',
+    'pn': 'Pitcairn',
+    'pr': 'Puerto Rico',
+    'ps': 'Palestine',
+    'pt': 'Portugal',
+    'py': 'Paraguay',
+    'qa': 'Qatar',
+    're': 'Reunion',
+    'ro': 'Romania',
+    'rs': 'Serbia',
+    'ru': 'Russian Federation',
+    'rw': 'Rwanda',
+    'sa': 'Saudi Arabia',
+    'sb': 'Solomon Islands',
+    'sc': 'Seychelles',
+    'se': 'Sweden',
+    'sg': 'Singapore',
+    'sh': 'Saint Helena',
+    'si': 'Slovenia',
+    'sj': 'Svalbard and Jan Mayen',
+    'sk': 'Slovakia',
+    'sl': 'Sierra Leone',
+    'sm': 'San Marino',
+    'sn': 'Senegal',
+    'sr': 'Suriname',
+    'sv': 'El Salvador',
+    'sx': 'Sint Maarten',
+    'sy': 'Syrian Arab Republic',
+    'sz': 'Swaziland',
+    'tc': 'Turks and Caicos Islands',
+    'td': 'Chad',
+    'th': 'Thailand',
+    'tk': 'Tokelau',
+    'tm': 'Turkmenistan',
+    'tn': 'Tunisia',
+    'tr': 'Turkey',
+    'tt': 'Trinidad and Tobago',
+    'tv': 'Tuvalu',
+    'tw': 'Taiwan',
+    'tz': 'Tanzania',
+    'ua': 'Ukraine',
+    'ug': 'Uganda',
+    'us': 'United States',
+    'uy': 'Uruguay',
+    'uz': 'Uzbekistan',
+    'va': 'Holy See (Vatican)',
+    'vc': 'Saint Vincent Grenadines',
+    've': 'Venezuela',
+    'vi': 'Virgin Islands, U.s.',
+    'vn': 'Viet Nam',
+    'vu': 'Vanuatu',
+    'wf': 'Wallis and Futuna',
+    'ws': 'Samoa',
+    'ye': 'Yemen',
+    'za': 'South Africa',
+    'zm': 'Zambia',
+}
+countries = {country:flag for flag, country in flags.items()}
 
 def html(resp: Response):
     return requests_html.HTML(url=resp.url, html=resp.content)
@@ -284,7 +494,7 @@ class Profile(Fetchable):
         if not self._cp_watts:
             url_watts = self.URL_CP.format(id=self.id, type='watts')
             self._cp_watts = self.scraper.get_url(url_watts).json()
-        if len(self._cp_wkg['efforts']) == 0:
+        if not self._cp_watts or len(self._cp_watts['efforts']) == 0:
             return None
         return {effort: {p['x']: p['y'] for p in data} for effort, data in self._cp_watts['efforts'].items()}
 
@@ -293,7 +503,7 @@ class Profile(Fetchable):
         if not self._cp_wkg:
             url_wkg = self.URL_CP.format(id=self.id, type='wkg')
             self._cp_wkg = self.scraper.get_url(url_wkg).json()
-        if len(self._cp_wkg['efforts']) == 0:
+        if not self._cp_wkg or len(self._cp_wkg['efforts']) == 0:
             return None
         return {effort: {p['x']: p['y'] for p in data} for effort, data in self._cp_wkg['efforts'].items()}
 
@@ -331,6 +541,22 @@ class Profile(Fetchable):
                    1200: {'pct': None, 'top': None, 'value': None},
                }
             }
+
+    @property
+    def country(self):
+        taglist = self.html.xpath("//th[normalize-space() = 'Country'][1]/following-sibling::td[1]")
+        if len(taglist) == 1:
+            # 220w ~ 86kg
+            return taglist[0].text.strip()
+        else:
+            logger.warning("Could not find country for %s", self.id)
+            return None
+
+    @property
+    def flag(self):
+        country = self.country
+        if country is not None:
+            return countries.get(country)
 
     def __str__(self):
         return "{0.name} ({0.cat}) <{0.id}>".format(self)
