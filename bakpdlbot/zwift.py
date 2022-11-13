@@ -74,6 +74,8 @@ async def event_embed(message, event):
             pus.append(f'{pu} - {event.powerups[pu]}%')
         embed.add_field(name='Powerups', value="\n".join(pus), inline=False)
 
+    if event.category_enforcement:
+        footer.append('category enforcement')
     for rule in event.rules_set:
         if rule == Event.NO_DRAFTING:
             footer.append('no draft')
@@ -88,8 +90,6 @@ async def event_embed(message, event):
         elif rule == Event.NO_TT_BIKES:
             footer.append('no tt bikes')
 
-    if event.category_enforcement:
-        footer.append('category enforcement')
     if 'doubledraft' in event.tags:
         footer.append('doubledraft')
     if event.jersey_hash is not None:
