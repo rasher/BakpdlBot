@@ -90,8 +90,14 @@ async def event_embed(message, event):
         elif rule == Event.NO_TT_BIKES:
             footer.append('no tt bikes')
 
-    if 'doubledraft' in event.tags:
-        footer.append('doubledraft')
+    if event.bike_hash is not None:
+        embed.add_field(name='Fixed Bike', value=event.fixed_bike_name)
+
+    for tag in event.tags:
+        handle_tag = handle_event_tag(tag)
+        if handle_tag is not None:
+            footer.append(handle_tag)
+
     if event.jersey_hash is not None:
         footer.append('fixed jersey')
 
@@ -100,6 +106,33 @@ async def event_embed(message, event):
 
     return embed
 
+def handle_event_tag(tag):
+    """Handle tag from events"""
+    if tag == 'doubledraft':
+        return 'doubledraft'
+    elif tag == 'ttbikesdraft':
+        return 'tt bikes draft'
+    elif 'bike_cda_bias' in tag:
+        return f'CDA: {get_tag_value(tag)}'
+    elif 'front_wheel_grams' in tag:
+        return f'FW grams: {get_tag_value(tag)}'
+    elif 'front_wheel_cda_bias' in tag:
+        return f'FW CDA: {get_tag_value(tag)}'
+    elif 'rear_wheel_grams' in tag:
+        return f'RW grams: {get_tag_value(tag)}'
+    elif 'rear_wheel_cda_bias' in tag:
+        return f'RW CDA: {get_tag_value(tag)}'
+    elif 'front_wheel_crr' in tag:
+        return f'FW CRR: {get_tag_value(tag)}'
+    elif 'fwheel_override' in tag:
+        return f'FW override: {get_tag_value(tag)}'
+    elif 'rwheeloverride' in tag:
+        return f'RW override: {get_tag_value(tag)}'
+    return None
+
+def get_tag_value(tag):
+    """Obtain value from tag setting"""
+    return tag.split('=')[-1]
 
 class Zwift(commands.Cog):
 
