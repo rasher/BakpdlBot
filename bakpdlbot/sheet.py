@@ -20,8 +20,7 @@ class Sheet(commands.Cog):
         user = str(ctx.author).split('#')[0]
         current_signups = ZrlSignups()
         message='```Hey ' + user + '' \
-                '\nZwift Racing League starts september 13th,\n' \
-                + current_signups + ' sign-ups so far! Find the sign-up form at: ' \
+                '\nFind the ZRL sign-up form at: ' \
                 '```<https://forms.gle/XAmyvXpv5e72jpkMA>'
         await ctx.send(message)
 
@@ -29,7 +28,7 @@ class Sheet(commands.Cog):
     async def ttt_team(self, ctx, *args):
         if len(args) == 0:
             teams = []
-            for i in range(1,6):
+            for i in range(1,3):
                 tname = 'BAKPDL ' + str(i)
                 teams.append(FindTttTeam(teamname=tname))
             message = '```Showing all Backpedal TTT team signups\n' + '\n'.join([team for team in teams]) + '```'
