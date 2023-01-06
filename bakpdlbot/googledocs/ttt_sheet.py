@@ -39,11 +39,11 @@ def FindTttTeam(teamname='BAKPDL 1',teamsize=8):
                                 riderinfo[5] = riderinfo[5] + 'W'
                                 members.append(riderinfo)
                         teammembers = list(filter(None, members))
-                    if len(teammembers) == 0:
+                    if len(teammembers)-1 == 0:
                         return teamname + ': 0 riders'
-                    if len(teammembers) > 0:
+                    if len(teammembers)-1 > 0:
                         namelist = tabulate(teammembers)
-                        message = teamname + ' (' + str(len(teammembers)) + ' riders):\n' + namelist
+                        message = teamname + ' (' + str(len(teammembers)-1) + ' riders):\n' + namelist
                         return message
         return 'No team found with name: ' + teamname
 
