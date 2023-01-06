@@ -22,7 +22,7 @@ def FindTttTeam(teamname='BAKPDL 1',teamsize=8):
     :return: string with teamname and teammembers, if found
     """
     values = GoogleSheetValues(spreadsheetid='16ip9cd6kpH2fl0dJYlG4UC1VOJL2eYjd8WSSXJMjss4',range='WTRL TTT Signups!A14:N')
-    members = [['', 'Rider', 'FTP', 'pull', '', 'Target']]
+    members = []
     if not values:
         return 'Something went wrong connecting to the google sheet'
     else:
@@ -42,6 +42,7 @@ def FindTttTeam(teamname='BAKPDL 1',teamsize=8):
                     if len(teammembers)-1 == 0:
                         return teamname + ': 0 riders'
                     if len(teammembers)-1 > 0:
+                        teammembers = [['', 'Rider', 'FTP', 'pull', '', 'Target']] + teammembers
                         namelist = tabulate(teammembers)
                         message = teamname + ' (' + str(len(teammembers)-1) + ' riders):\n' + namelist
                         return message
