@@ -144,7 +144,7 @@ class Zwift(commands.Cog):
         if message.channel.name in ('introductions', 'chit-chat', 'gallery', "ed's-little-blog"):
             return
         eventlink = re.compile(
-            r'https://www.zwift.com/.*events/.*view/(?P<eid>[0-9]+)(?:\?eventSecret=(?P<secret>[0-9a-z]+))?')
+            r'(?:https?:\/\/)(www.)?zwift.com/.*events/.*view/(?P<eid>[0-9]+)(?:\?eventSecret=(?P<secret>[0-9a-z]+))?')
         for m in eventlink.finditer(message.content):
             eid = int(m.group('eid'))
             secret = m.group('secret')
