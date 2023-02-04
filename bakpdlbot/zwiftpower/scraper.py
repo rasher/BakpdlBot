@@ -5,6 +5,7 @@ import re
 import time
 import traceback
 from typing import Iterator, List
+from html import unescape
 
 import demjson
 import requests_html
@@ -223,6 +224,13 @@ flags = {
 }
 countries = {country:flag for flag, country in flags.items()}
 
+
+def decodeentities(s):
+    if isinstance(s, str) and '&' in s:
+        return unescape(s)
+    return s
+
+
 def html(resp: Response):
     return requests_html.HTML(url=resp.url, html=resp.content)
 
@@ -263,7 +271,7 @@ class Rider:
         return self._profile
 
     def __getattr__(self, item):
-        return self.data.get(item, None)
+        return decodeentities(self.data.get(item, None))
 
     def __repr__(self):
         return "<{0.__class__.__name__} id={0.id}, name='{0.name}'>".format(self)
