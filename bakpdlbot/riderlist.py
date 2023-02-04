@@ -171,6 +171,9 @@ def is_zrl_ttt(race: Dict) -> bool:
         # ZRL 22/23 Round 2
         date(2022, 11, 15), date(2022, 11, 16),  # Week 2
         date(2022, 12,  6), date(2022, 12,  7),  # Week 5
+        # ZRL 22/23 Round 3
+        date(2023,  1, 17), date(2023,  1, 18),  # Week 2
+        date(2023,  2,  7), date(2023,  2,  8),  # Week 5
     ]
     race_date = datetime.utcfromtimestamp(race['event_date'])
     return race_date.date() in ttt_dates
@@ -351,7 +354,8 @@ def main(clear_cache, debug, zwift_user, zwift_pass, tplvars, output_file, rider
     env.filters['csv_dict'] = filter_csv_dict
 
     tpl = env.get_template(template)
-    ctx.update(getattr(Getters, source)(s, id_))
+    with cached.cache_disabled():
+        ctx.update(getattr(Getters, source)(s, id_))
     result = tpl.render(args=dict(tplvars), **ctx)
 
     with click.open_file(output_file, mode='w') as f:

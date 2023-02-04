@@ -8,7 +8,7 @@
     'team': p.tname,
     } -%}
 {%- for time in times -%}
-    {%- if p.profile.cp_wkg -%}
+    {%- if p.profile.cp_wkg and time in p.profile.cp_wkg['90days'] -%}
         {%- set _=row.__setitem__(time|sdur + ' wkg', p.profile.cp_wkg['90days'][time]) -%}
         {%- set _=row.__setitem__(time|sdur + ' w', p.profile.cp_watts['90days'][time]) -%}
     {%- else -%}
