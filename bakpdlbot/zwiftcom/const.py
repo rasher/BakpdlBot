@@ -10,6 +10,7 @@ worlds = {
     9: 'Makuri Islands',
     10: 'France',
     11: 'Paris',
+    13: 'Scotland'
 }
 
 routes = {
@@ -202,7 +203,12 @@ routes = {
     4232726854: "Surfin' Safari",
     4240327959: '11.1 Ocean Blvd',
     4258943387: 'Turf N Surf',
-    4263172118: 'Three Sisters Reverse'
+    4263172118: 'Three Sisters Reverse',
+    46799750: 'Rolling Highlands',
+    742057576: 'Loch Loop',
+    3765339356: 'Glasgow Crit Circuit',
+    4107749591: 'City and the Sgurr'
+
 }
 
 makuri_routes = (
