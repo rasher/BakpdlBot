@@ -5,7 +5,7 @@ from datetime import timedelta
 import ago
 import discord
 import pendulum
-from discord import Member
+from discord import Member, PartialMessageable
 from discord.ext import commands
 
 from . import zwiftcom
@@ -16,12 +16,15 @@ TIMEZONE = pendulum.timezone("Europe/London")
 
 logger = logging.getLogger(__name__)
 
+from pprint import pprint
 
-async def event_embed(message, event):
+async def event_embed(message, event, emojis=[]):
     """Generate Embed object for a Zwift event"""
     cat_emoji = {}
     for c in 'ABCDE':
-        cat_emoji[c] = discord.utils.get(message.guild.emojis, name='zcat' + c.lower())
+        emoji = discord.utils.get(emojis, name='zcat' + c.lower())
+        if emoji:
+            cat_emoji[c] = emoji
 
     start = event.event_start
     embed = (
@@ -62,7 +65,7 @@ async def event_embed(message, event):
         cats_text.append(
             "{s.event_subgroup_start:H:mm} {emoji} {s.from_pace_value:.1f}-{s.to_pace_value:.1f} w/kg"
             "{route}{world} {cat_rules}".format(
-                s=subgroup, emoji=cat_emoji[subgroup.subgroup_label],
+                s=subgroup, emoji=cat_emoji.get(subgroup.subgroup_label, subgroup.subgroup_label,),
                 route=route, world=world, cat_rules=cat_rules
             )
         )
@@ -138,18 +141,23 @@ class Zwift(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.emojis = None
 
     @commands.Cog.listener("on_message")
     async def zwift_link_embed(self, message):
-        if message.channel.name in ('introductions', 'chit-chat', 'gallery', "ed's-little-blog"):
-            return
+        if self.emojis is None:
+            self.emojis = await message.guild.fetch_emojis()
+        if isinstance(message.channel, PartialMessageable):
+            channel = await self.bot.fetch_channel(message.channel.id)
+            if channel.name in ('introductions', 'chit-chat', 'gallery', "ed's-little-blog"):
+                return
         eventlink = re.compile(
             r'(?:https?:\/\/)(www.)?zwift.com/.*events/.*view/(?P<eid>[0-9]+)(?:\?eventSecret=(?P<secret>[0-9a-z]+))?')
         for m in eventlink.finditer(message.content):
             eid = int(m.group('eid'))
             secret = m.group('secret')
             event = zwiftcom.get_event(eid, secret)
-            embed = await event_embed(message, event)
+            embed = await event_embed(message, event, emojis=self.emojis)
             await message.reply(embed=embed)
 
     @commands.command(name='zwiftid', help='Searches zwiftid of name')
@@ -206,8 +214,8 @@ class Zwift(commands.Cog):
         return results
 
 
-def setup(bot):
-    bot.add_cog(Zwift(bot))
+async def setup(bot):
+    await bot.add_cog(Zwift(bot))
 
 
 def teardown(bot):

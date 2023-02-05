@@ -1,8 +1,10 @@
 import traceback
-
+import discord
 from discord.ext import commands
 
-bot = commands.Bot(command_prefix='!')
+intents = discord.Intents(message_content=True, messages=True)
+
+bot = commands.Bot(command_prefix='!', intents=intents)
 bot.EXTENSIONS = (
     'bakpdlbot.simple',
     'bakpdlbot.sheet',
@@ -16,7 +18,7 @@ bot.EXTENSIONS = (
 async def load_extensions(*args):
     for e in bot.EXTENSIONS:
         try:
-            bot.load_extension(e)
+            await bot.load_extension(e)
         except Exception:
             traceback.print_exc()
 

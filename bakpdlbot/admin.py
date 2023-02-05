@@ -13,7 +13,7 @@ class Admin(commands.Cog):
     async def reload(self, ctx, *args):
         for e in self.extensions:
             try:
-                ctx.bot.reload_extension(e)
+                await ctx.bot.reload_extension(e)
             except Exception:
                 traceback.print_exc()
 
@@ -22,13 +22,13 @@ class Admin(commands.Cog):
     async def load(self, ctx, *args):
         for e in self.extensions:
             try:
-                ctx.bot.load_extension(e)
+                await ctx.bot.load_extension(e)
             except Exception:
                 traceback.print_exc()
 
 
-def setup(bot):
-    bot.add_cog(Admin(bot, bot.EXTENSIONS))
+async def setup(bot):
+    await bot.add_cog(Admin(bot, bot.EXTENSIONS))
 
 
 def teardown(bot):

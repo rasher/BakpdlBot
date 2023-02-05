@@ -126,8 +126,8 @@ class ZwiftPower(commands.Cog):
         return discord.File(buf, filename=fn)
 
 
-def setup(bot):
-    bot.add_cog(ZwiftPower(bot))
+async def setup(bot):
+    await bot.add_cog(ZwiftPower(bot))
 
 
 def teardown(bot):
