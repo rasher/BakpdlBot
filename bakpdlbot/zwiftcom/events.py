@@ -41,7 +41,7 @@ class Eventish(ABC):
             mapname = 'Makuri Islands'
         elif mapname is None:
             logger.warning("Unknown map id: %s", self.map_id)
-            mapname = 'Unknown'
+            mapname = f'Unknown {self.map_id}'
         return mapname
 
     @property

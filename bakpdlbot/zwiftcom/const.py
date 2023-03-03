@@ -207,7 +207,8 @@ routes = {
     46799750: 'Rolling Highlands',
     742057576: 'Loch Loop',
     3765339356: 'Glasgow Crit Circuit',
-    4107749591: 'City and the Sgurr'
+    4107749591: 'City and the Sgurr',
+    3662705581: 'The Muckle Yin'
 
 }
 
