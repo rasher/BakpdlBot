@@ -13,7 +13,7 @@
             font-family: sans-serif;
         }
 
-        table {
+        table, img {
             border-collapse: collapse;
             margin: 25px 0;
             font-size: 0.9em;
@@ -93,6 +93,10 @@
 <body>
     <h1>{{ title }}</h1>
 
+    {% if args.header is defined %}
+        {{ args.header }}
+    {% endif %}
+
     <table>
         <thead>
             <tr>
@@ -102,7 +106,7 @@
                 <th>Weight</th>
                 <th>Height</th>
                 <th>TTTs</th>
-                <th>FTP</th>
+                <th>zFTP</th>
                 <th>95% 20m</th>
                 {% for time in times %}
                     <th>{{ time|sdur }} wkg</th>
