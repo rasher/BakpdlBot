@@ -4,7 +4,6 @@ from datetime import timedelta
 
 import ago
 import discord
-import pendulum
 from discord import Member, PartialMessageable
 from discord.ext import commands
 
@@ -12,7 +11,6 @@ from . import zwiftcom
 from .sheet import Sheet
 from .zwiftcom import Event
 
-TIMEZONE = pendulum.timezone("Europe/London")
 
 logger = logging.getLogger(__name__)
 
