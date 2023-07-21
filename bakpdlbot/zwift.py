@@ -16,7 +16,45 @@ TIMEZONE = pendulum.timezone("Europe/London")
 
 logger = logging.getLogger(__name__)
 
-from pprint import pprint
+
+class TimeTag:
+    def __init__(self, datetime):
+        self.datetime = datetime
+
+    def _format(self, type_):
+        return "<t:{0:.0f}:{1}>".format(self.datetime.timestamp(), type_)
+
+    @property
+    def short_time(self):
+        return self._format('t')
+
+    @property
+    def long_time(self):
+        return self._format('T')
+
+    @property
+    def short_date(self):
+        return self._format('d')
+
+    @property
+    def long_date(self):
+        return self._format('D')
+
+    @property
+    def long_date_short_time(self):
+        return self._format('f')
+
+    @property
+    def long_date_short_time_dow(self):
+        return self._format('F')
+
+    @property
+    def relative(self):
+        return self._format('R')
+
+    def __str__(self):
+        return "<t:{0:.0f}>".format(self.datetime.timestamp())
+
 
 async def event_embed(message, event, emojis=[]):
     """Generate Embed object for a Zwift event"""
@@ -43,7 +81,7 @@ async def event_embed(message, event, emojis=[]):
     if same_world:
         embed.add_field(name='World', value=event.map)
 
-    embed.add_field(name='Start', value="{:ddd MMM Do H:mm zz}".format(start.in_timezone(TIMEZONE)))
+    embed.add_field(name='Start', value=TimeTag(start).long_date_short_time_dow)
 
     if event.distance_in_meters:
         embed.add_field(name='Custom Distance', value='{:.1f} km'.format(event.distance_in_meters / 1000))
@@ -64,10 +102,11 @@ async def event_embed(message, event, emojis=[]):
             if rule == Event.NO_DRAFTING:
                 cat_rules = '(no draft)'
         cats_text.append(
-            "{s.event_subgroup_start:H:mm} {emoji} {s.from_pace_value:.1f}-{s.to_pace_value:.1f} w/kg"
+            "{emoji} {start} {s.from_pace_value:.1f}-{s.to_pace_value:.1f} w/kg"
             "{route}{world} {cat_rules}".format(
                 s=subgroup, emoji=cat_emoji.get(subgroup.subgroup_label, subgroup.subgroup_label,),
-                route=route, world=world, cat_rules=cat_rules
+                route=route, world=world, cat_rules=cat_rules,
+                start=TimeTag(subgroup.event_subgroup_start).short_time
             )
         )
     embed.add_field(name='Cats', value="\n".join(cats_text), inline=False)
