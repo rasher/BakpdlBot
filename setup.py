@@ -27,6 +27,7 @@ requirements = [
         'matplotlib~=3.5.1',
         'jinja2~=3.0.3',
         'appdirs~=1.4.4',
+        'html5lib~=1.1',
         ]
 
 test_requirements = [ ]
@@ -51,6 +52,7 @@ setup(
         'console_scripts': [
             'bakpdlbot=bakpdlbot.cli:main',
             'riderlist=bakpdlbot.riderlist:main',
+            'zhroutes=bakpdlbot.zhroutes:main',
         ],
     },
     install_requires=requirements,

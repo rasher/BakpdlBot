@@ -5,7 +5,7 @@ from abc import ABC
 import pendulum
 import requests
 
-from .const import worlds, routes, makuri_routes, bikes
+from .const import worlds, routes, bikes
 
 logger = logging.getLogger(__name__)
 
@@ -35,13 +35,12 @@ class Eventish(ABC):
 
     @property
     def map(self):
-        mapname = worlds.get(self.map_id)
-        if mapname is None and self.route_id in makuri_routes:
-            logger.info("Using hard-coded map Makuri Islands for %s", self.route_id)
-            mapname = 'Makuri Islands'
-        elif mapname is None:
-            logger.warning("Unknown map id: %s", self.map_id)
-            mapname = f'Unknown {self.map_id}'
+        route = self.route
+        if route is not None:
+            mapname = worlds.get(route['worldid'])
+            if mapname is None:
+                logger.warning("Unknown map id: %s", route['worldid'])
+                mapname = f'Unknown {self.map_id}'
         return mapname
 
     @property

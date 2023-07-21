@@ -36,10 +36,10 @@ async def event_embed(message, event, emojis=[]):
 
     # Check if subgroups are on separate worlds and/or routes
     same_world = len(set([sg.map for sg in event.event_subgroups])) == 1
-    same_route = len(set([sg.route for sg in event.event_subgroups])) == 1
+    same_route = len(set([sg.route['id'] for sg in event.event_subgroups])) == 1
 
     if same_route:
-        embed.add_field(name='Route', value=event.route)
+        embed.add_field(name='Route', value=event.route['route'])
     if same_world:
         embed.add_field(name='World', value=event.map)
 
@@ -50,7 +50,8 @@ async def event_embed(message, event, emojis=[]):
     elif event.duration_in_seconds:
         embed.add_field(name='Duration', value=ago.human(timedelta(seconds=event.duration_in_seconds), past_tense="{}"))
     elif event.laps:
-        embed.add_field(name='Laps', value=event.laps)
+        distance_m = event.route['leadindistance'] + (int(event.laps) * event.route['lapdistance'])
+        embed.add_field(name='Laps', value="%d (%.1f km)" % (event.laps, distance_m/1000.0))
 
     cats_text = []
     footer = []
