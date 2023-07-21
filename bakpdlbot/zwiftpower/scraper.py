@@ -446,12 +446,16 @@ class Profile(Fetchable):
 
     @property
     def ftp(self):
-        taglist = self.html.xpath("//th[normalize-space() = 'FTP'][1]/following-sibling::td[1]")
+        return self.zftp
+
+    @property
+    def zftp(self):
+        taglist = self.html.xpath("//th[normalize-space() = 'zFTP'][1]/following-sibling::td[1]")
         if len(taglist) == 1:
             # 220w ~ 86kg
             return int(taglist[0].text.strip().split('w', 1)[0])
         else:
-            logger.warning("Could not find ftp for %s", self.id)
+            logger.warning("Could not find zFTP for %s", self.id)
             return None
 
     @property
