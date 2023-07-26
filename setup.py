@@ -12,7 +12,7 @@ with open('HISTORY.rst') as history_file:
 
 requirements = [
         'Click~=7.0',
-        'discord~=1.7.3',
+        'discord.py~=2.1.0',
         'python-dotenv~=0.19.2',
         'google-api-python-client~=1.12.8',
         'google-auth-oauthlib~=0.4.1',
@@ -27,6 +27,7 @@ requirements = [
         'matplotlib~=3.5.1',
         'jinja2~=3.0.3',
         'appdirs~=1.4.4',
+        'html5lib~=1.1',
         ]
 
 test_requirements = [ ]
@@ -51,6 +52,7 @@ setup(
         'console_scripts': [
             'bakpdlbot=bakpdlbot.cli:main',
             'riderlist=bakpdlbot.riderlist:main',
+            'zhroutes=bakpdlbot.zhroutes:main',
         ],
     },
     install_requires=requirements,

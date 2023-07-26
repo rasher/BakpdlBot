@@ -28,9 +28,9 @@ class SimpleCommands(commands.Cog):
     #     await ctx.send(message)
 
 
-def setup(bot):
-    bot.add_cog(SimpleCommands(bot))
+async def setup(bot):
+    await bot.add_cog(SimpleCommands(bot))
 
 
-def teardown(bot):
+async def teardown(bot):
     pass

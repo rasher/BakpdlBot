@@ -67,8 +67,8 @@ class Sheet(commands.Cog):
         return self.discord_zid_map
 
 
-def setup(bot):
-    bot.add_cog(Sheet(bot))
+async def setup(bot):
+    await bot.add_cog(Sheet(bot))
 
 
 def teardown(bot):

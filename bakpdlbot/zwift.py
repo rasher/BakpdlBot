@@ -4,24 +4,63 @@ from datetime import timedelta
 
 import ago
 import discord
-import pendulum
-from discord import Member
+from discord import Member, PartialMessageable
 from discord.ext import commands
 
 from . import zwiftcom
 from .sheet import Sheet
 from .zwiftcom import Event
 
-TIMEZONE = pendulum.timezone("Europe/London")
 
 logger = logging.getLogger(__name__)
 
 
-async def event_embed(message, event):
+class TimeTag:
+    def __init__(self, datetime):
+        self.datetime = datetime
+
+    def _format(self, type_):
+        return "<t:{0:.0f}:{1}>".format(self.datetime.timestamp(), type_)
+
+    @property
+    def short_time(self):
+        return self._format('t')
+
+    @property
+    def long_time(self):
+        return self._format('T')
+
+    @property
+    def short_date(self):
+        return self._format('d')
+
+    @property
+    def long_date(self):
+        return self._format('D')
+
+    @property
+    def long_date_short_time(self):
+        return self._format('f')
+
+    @property
+    def long_date_short_time_dow(self):
+        return self._format('F')
+
+    @property
+    def relative(self):
+        return self._format('R')
+
+    def __str__(self):
+        return "<t:{0:.0f}>".format(self.datetime.timestamp())
+
+
+async def event_embed(message, event, emojis=[]):
     """Generate Embed object for a Zwift event"""
     cat_emoji = {}
     for c in 'ABCDE':
-        cat_emoji[c] = discord.utils.get(message.guild.emojis, name='zcat' + c.lower())
+        emoji = discord.utils.get(emojis, name='zcat' + c.lower())
+        if emoji:
+            cat_emoji[c] = emoji
 
     start = event.event_start
     embed = (
@@ -33,21 +72,22 @@ async def event_embed(message, event):
 
     # Check if subgroups are on separate worlds and/or routes
     same_world = len(set([sg.map for sg in event.event_subgroups])) == 1
-    same_route = len(set([sg.route for sg in event.event_subgroups])) == 1
+    same_route = len(set([sg.route['id'] for sg in event.event_subgroups])) == 1
 
     if same_route:
-        embed.add_field(name='Route', value=event.route)
+        embed.add_field(name='Route', value=event.route['route'])
     if same_world:
         embed.add_field(name='World', value=event.map)
 
-    embed.add_field(name='Start', value="{:ddd MMM Do H:mm zz}".format(start.in_timezone(TIMEZONE)))
+    embed.add_field(name='Start', value=TimeTag(start).long_date_short_time_dow)
 
     if event.distance_in_meters:
         embed.add_field(name='Custom Distance', value='{:.1f} km'.format(event.distance_in_meters / 1000))
     elif event.duration_in_seconds:
         embed.add_field(name='Duration', value=ago.human(timedelta(seconds=event.duration_in_seconds), past_tense="{}"))
     elif event.laps:
-        embed.add_field(name='Laps', value=event.laps)
+        distance_m = event.route['leadindistance'] + (int(event.laps) * event.route['lapdistance'])
+        embed.add_field(name='Laps', value="%d (%.1f km)" % (event.laps, distance_m/1000.0))
 
     cats_text = []
     footer = []
@@ -60,10 +100,11 @@ async def event_embed(message, event):
             if rule == Event.NO_DRAFTING:
                 cat_rules = '(no draft)'
         cats_text.append(
-            "{s.event_subgroup_start:H:mm} {emoji} {s.from_pace_value:.1f}-{s.to_pace_value:.1f} w/kg"
+            "{emoji} {start} {s.from_pace_value:.1f}-{s.to_pace_value:.1f} w/kg"
             "{route}{world} {cat_rules}".format(
-                s=subgroup, emoji=cat_emoji[subgroup.subgroup_label],
-                route=route, world=world, cat_rules=cat_rules
+                s=subgroup, emoji=cat_emoji.get(subgroup.subgroup_label, subgroup.subgroup_label,),
+                route=route, world=world, cat_rules=cat_rules,
+                start=TimeTag(subgroup.event_subgroup_start).short_time
             )
         )
     embed.add_field(name='Cats', value="\n".join(cats_text), inline=False)
@@ -138,18 +179,23 @@ class Zwift(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.emojis = None
 
     @commands.Cog.listener("on_message")
     async def zwift_link_embed(self, message):
-        if message.channel.name in ('introductions', 'chit-chat', 'gallery', "ed's-little-blog"):
-            return
+        if self.emojis is None:
+            self.emojis = await message.guild.fetch_emojis()
+        if isinstance(message.channel, PartialMessageable):
+            channel = await self.bot.fetch_channel(message.channel.id)
+            if channel.name in ('introductions', 'chit-chat', 'gallery', "ed's-little-blog"):
+                return
         eventlink = re.compile(
             r'(?:https?:\/\/)(www.)?zwift.com/.*events/.*view/(?P<eid>[0-9]+)(?:\?eventSecret=(?P<secret>[0-9a-z]+))?')
         for m in eventlink.finditer(message.content):
             eid = int(m.group('eid'))
             secret = m.group('secret')
             event = zwiftcom.get_event(eid, secret)
-            embed = await event_embed(message, event)
+            embed = await event_embed(message, event, emojis=self.emojis)
             await message.reply(embed=embed)
 
     @commands.command(name='zwiftid', help='Searches zwiftid of name')
@@ -206,8 +252,8 @@ class Zwift(commands.Cog):
         return results
 
 
-def setup(bot):
-    bot.add_cog(Zwift(bot))
+async def setup(bot):
+    await bot.add_cog(Zwift(bot))
 
 
 def teardown(bot):
