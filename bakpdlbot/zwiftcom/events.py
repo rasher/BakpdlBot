@@ -69,7 +69,8 @@ class Eventish(ABC):
             4: 'Burrito',
             5: 'Aero',
             6: 'Ghost',
-            7: 'Steamroller'
+            7: 'Steamroller',
+            8: 'Anvil',
         }
         for tag in self.tags:
             if tag.startswith('powerup_percent='):
