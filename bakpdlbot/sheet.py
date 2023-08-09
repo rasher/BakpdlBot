@@ -21,7 +21,7 @@ class Sheet(commands.Cog):
         current_signups = ZrlSignups()
         message='```Hey ' + user + '' \
                 '\nFind the ZRL sign-up form at: ' \
-                '```<https://forms.gle/XAmyvXpv5e72jpkMA>'
+                '```<https://forms.gle/uP7WYfVXVR6Wzpdg6>'
         await ctx.send(message)
 
     @commands.command(name='ttt-team', help='Shows the current ttt-team <name>')
