@@ -1,5 +1,5 @@
-{% set extended_power=false %}
-{% set t=team %}
+{%- set extended_power=false -%}
+{%- set t=team -%}
 <!DOCTYPE html>
 <html>
     <head>
@@ -39,7 +39,7 @@
                 border-bottom: medium solid {{ t.colors.border }};
             }
             tbody tr:hover {
-                color: {{ t.colors.text }};
+                color: black;
                 background-color: #eeeeee;
             }
 
@@ -75,23 +75,24 @@
                 <th>20m power</th>
                 <th>15s w/kg</th>
                 <th>15s power</th>
-                <th>FTP</th>
+                <th>zFTP</th>
                 <th>Weight</th>
                 <th>Height</th>
                 <th>Races</th>
                 <th>TTTs</th>
                 <th>Flag</th>
                 <th>Punch</th>
-                {% if extended_power %}
+                {% if extended_power -%}
                 <th>1m w/kg</th>
                 <th>1m power</th>
                 <th>5m w/kg</th>
                 <th>5m power</th>
-                {% endif %}
+                {% endif -%}
+                <th>vELO</th>
             </tr>
         </thead>
         <tbody>
-        {%- for r in riders -%}
+        {%- for r in riders %}
             <tr>
                 <td><a href="https://www.zwiftpower.com/profile.php?z={{ r.zwid }}">{{ r.zwid }}</a></td>
                 <td class="category category-{{ r.div|catstr|replace('+', 'plus') }}-icon"><span>{{ r.div|catstr }}</span></td>
@@ -107,15 +108,16 @@
                 <td>{{ r.profile.races|ttts|list|length }}</td>
                 <td><span class="flag" title="{{ r.flag }}">{{ r.flag|flag2unicode }}</span></td>
                 <td>{% if r.profile.punch %}{{ r.profile.punch|default('', true) }}%{% endif %}</td>
-                {% if extended_power %}
-                {% set pp=r.profile.power_profile %}
+                {%- if extended_power %}
+                {%- set pp=r.profile.power_profile %}
                 <td>{{ pp.wkg.60.value|default('', true) }}</td>
                 <td>{{ pp.watt.60.value|default('', true) }}</td>
                 <td>{{ pp.wkg.300.value|default('', true) }}</td>
                 <td>{{ pp.watt.300.value|default('', true) }}</td>
-                {% endif %}
+                {%- endif %}
+                <td>{% if r.zwid in zwiftracing %}{{ zwiftracing[r.zwid].race.rating|round|int }}{% endif %}</td>
             </tr>
-        {%- endfor -%}
+        {%- endfor %}
         </tbody>
     </table>
     <small>Last updated: {{ now.strftime('%Y-%m-%d %H:%M:%S') }}</small>

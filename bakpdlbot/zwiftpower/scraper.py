@@ -7,7 +7,7 @@ import traceback
 from typing import Iterator, List
 from html import unescape
 
-import demjson
+import demjson3 as demjson
 import requests_html
 from requests import Response, Session
 

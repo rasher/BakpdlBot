@@ -18,6 +18,7 @@ from matplotlib.figure import Figure
 from requests_cache import CachedSession
 
 from .zwiftpower.scraper import Scraper
+from . import zwiftracing
 
 from .zp import make_cp, ago_fmt
 
@@ -250,8 +251,10 @@ class Getters:
     def team(scraper: Scraper, id_: int):
         """Return all riders on a team"""
         team = scraper.team(id_)
+        zr_team = {r.rider_id: r for r in zwiftracing.Team(id_).riders()}
         return {
             'team': team,
+            'zwiftracing': zr_team,
             'type': 'team',
             'riders': list(team.members),
         }
