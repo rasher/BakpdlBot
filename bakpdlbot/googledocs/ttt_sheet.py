@@ -20,6 +20,7 @@ def ZwiftCatEmoji(zcat=None):
 
 def SignupRider(member, name):
     signups = GoogleSheetValues(spreadsheetid=SHEET_ID, range='WtrlTTTSignupNames')
+    signup_length = len(signups)
     discordnames = GoogleSheetValues(spreadsheetid=SHEET_ID, range='DiscordIdNames')
     signups = [r[0] for r in signups if len(r) > 0 and len(str(r[0]).strip()) > 0]
     dn_map = {int(r[0]): r[1:] for r in discordnames}
@@ -31,11 +32,12 @@ def SignupRider(member, name):
         name = dn_map[member.id][1]
     if name not in signups:
         signups.append(name)
-        set_signups(signups)
+        set_signups(signups, signup_length)
 
 
 def RemoveSignup(member):
     signups = GoogleSheetValues(spreadsheetid=SHEET_ID, range='WtrlTTTSignupNames')
+    signup_length = len(signups)
     discordnames = GoogleSheetValues(spreadsheetid=SHEET_ID, range='DiscordIdNames')
     signups = [r[0] for r in signups if len(r) > 0 and len(str(r[0]).strip()) > 0]
     dn_map = {int(r[0]): r[1:] for r in discordnames}
@@ -45,12 +47,14 @@ def RemoveSignup(member):
     if name not in signups:
         raise Exception("You are not signed up")
     else:
-        signups[signups.index(name)] = ''
-        set_signups(signups)
+        del(signups[signups.index(name)])
+        set_signups(signups, signup_length)
 
 
-def set_signups(signups):
+def set_signups(signups, signup_length):
     service = MakeSheetConnection()
+    while len(signups) < signup_length:
+        signups.append('')
     body = {'values': [[signup] for signup in signups]}
     service.spreadsheets().values().update(
         spreadsheetId=SHEET_ID, range='WtrlTTTSignupNames', valueInputOption='USER_ENTERED', body=body).execute()

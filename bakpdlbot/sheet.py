@@ -42,7 +42,10 @@ class Sheet(commands.Cog):
     async def ttt_signup(self, ctx, *, name: typing.Optional[str]):
         try:
             SignupRider(ctx.author, name)
-            await ctx.message.reply("You are now signed up")
+            msg = "You are now signed up"
+            if name is not None:
+                msg += ". You can now simply use !ttt-signup to sign up as " + name
+            await ctx.message.reply(msg)
         except Exception as e:
             traceback.print_exc()
             await ctx.message.reply("Error: " + str(e))
