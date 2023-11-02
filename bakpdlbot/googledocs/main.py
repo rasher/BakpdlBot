@@ -6,7 +6,7 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 
 # If modifying these scopes, delete the file token.json.
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
 # Location of token file
 tokenfile=os.path.join(os.path.dirname(__file__),'token.json')
@@ -30,7 +30,7 @@ def MakeSheetConnection():
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
                 os.path.join(os.path.dirname(__file__), 'credentials.json'), SCOPES)
-            creds = flow.run_local_server(port=0)
+            creds = flow.run_local_server(port=8080)
         # Save the credentials for the next run
         with open(tokenfile, 'w') as token:
             token.write(creds.to_json())

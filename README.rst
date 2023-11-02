@@ -35,7 +35,7 @@ Setup a project with API access as described in https://developers.google.com/do
 
 Run the following command:
 
-    google-oauthlib-tool --client-secrets bakpdlbot/googledocs/credentials.json --credentials bakpdlbot/googledocs/token.json --save --scope https://www.googleapis.com/auth/spreadsheets.readonly
+    google-oauthlib-tool --client-secrets bakpdlbot/googledocs/credentials.json --credentials bakpdlbot/googledocs/token.json --save --scope https://www.googleapis.com/auth/spreadsheets
 
 Credits
 -------
