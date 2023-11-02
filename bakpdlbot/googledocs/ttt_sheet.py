@@ -21,7 +21,6 @@ def ZwiftCatEmoji(zcat=None):
 def SignupRider(member, name):
     signups = GoogleSheetValues(spreadsheetid=SHEET_ID, range='WtrlTTTSignupNames')
     discordnames = GoogleSheetValues(spreadsheetid=SHEET_ID, range='DiscordIdNames')
-    pprint(signups)
     signups = [r[0] for r in signups if len(r) > 0 and len(str(r[0]).strip()) > 0]
     dn_map = {int(r[0]): r[1:] for r in discordnames}
     if name is not None:
