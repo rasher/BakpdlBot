@@ -28,15 +28,19 @@ class Sheet(commands.Cog):
 
     @commands.command(name='ttt-team', help='Shows the current ttt-team <name>')
     async def ttt_team(self, ctx, *args):
-        if len(args) == 0:
-            teams = []
-            for i in range(1,3):
-                tname = 'BAKPDL ' + str(i)
-                teams.append(FindTttTeam(teamname=tname))
-            message = '```Showing all Backpedal TTT team signups\n' + '\n'.join([team for team in teams]) + '```'
-        else:
-            message = '```' + FindTttTeam(teamname=' '.join(args)) + '```'
-        await ctx.send(message)
+        try:
+            if len(args) == 0:
+                teams = []
+                for i in range(1,3):
+                    tname = 'BAKPDL ' + str(i)
+                    teams.append(FindTttTeam(teamname=tname))
+                message = '```Showing all Backpedal TTT team signups\n' + '\n'.join([team for team in teams]) + '```'
+            else:
+                message = '```' + FindTttTeam(teamname=' '.join(args)) + '```'
+            await ctx.send(message)
+        except Exception as e:
+            traceback.print_exc()
+            await ctx.message.reply("Error: " + str(e))
 
     @commands.command(name='ttt-signup', help='Sign up for next week\'s WTRL TTT')
     async def ttt_signup(self, ctx, *, name: typing.Optional[str]):

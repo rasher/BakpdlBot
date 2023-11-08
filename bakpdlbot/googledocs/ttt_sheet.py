@@ -83,7 +83,7 @@ def FindTttTeam(teamname='BAKPDL 1',teamsize=8):
     :param teamsize: int, team size, default 8
     :return: string with teamname and teammembers, if found
     """
-    values = GoogleSheetValues(spreadsheetid=SHEET_ID, range='WTRL TTT Signups!A14:N')
+    values = GoogleSheetValues(spreadsheetid=SHEET_ID, range='WTRL TTT Signups!F14:S')
     members = []
     if not values:
         return 'Something went wrong connecting to the google sheet'
