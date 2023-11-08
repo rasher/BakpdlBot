@@ -1,9 +1,11 @@
 import logging
+import traceback
+import typing
 
 from discord import Member
 from discord.ext import commands
 
-from .googledocs.ttt_sheet import FindTttTeam
+from .googledocs.ttt_sheet import FindTttTeam, SignupRider, RemoveSignup
 from .googledocs.zrl import ZrlSignups, ZrlTeam, GetDiscordNames
 
 logger = logging.getLogger(__name__)
@@ -35,6 +37,27 @@ class Sheet(commands.Cog):
         else:
             message = '```' + FindTttTeam(teamname=' '.join(args)) + '```'
         await ctx.send(message)
+
+    @commands.command(name='ttt-signup', help='Sign up for next week\'s WTRL TTT')
+    async def ttt_signup(self, ctx, *, name: typing.Optional[str]):
+        try:
+            SignupRider(ctx.author, name)
+            msg = "You are now signed up"
+            if name is not None:
+                msg += ". You can now simply use !ttt-signup to sign up as " + name
+            await ctx.message.reply(msg)
+        except Exception as e:
+            traceback.print_exc()
+            await ctx.message.reply("Error: " + str(e))
+
+    @commands.command(name='ttt-signoff', help='Cancel sign-up for next week\'s WTRL TTT')
+    async def ttt_signoff(self, ctx):
+        try:
+            RemoveSignup(ctx.author)
+            await ctx.message.reply("You are no longer signed up")
+        except Exception as e:
+            traceback.print_exc()
+            await ctx.message.reply("Error: " + str(e))
 
     @commands.command(name='zrl-team', help='Shows the zrl-team <teamtag> "full"')
     async def zrl_team(self, ctx, *args):

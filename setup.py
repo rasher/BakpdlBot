@@ -12,7 +12,7 @@ with open('HISTORY.rst') as history_file:
 
 requirements = [
         'Click~=7.0',
-        'discord.py~=2.1.0',
+        'discord.py~=2.3.2',
         'python-dotenv~=0.19.2',
         'google-api-python-client~=1.12.8',
         'google-auth-oauthlib~=0.4.1',
