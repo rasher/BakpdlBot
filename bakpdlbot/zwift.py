@@ -10,6 +10,8 @@ from discord.ext import commands
 from . import zwiftcom
 from .sheet import Sheet
 from .zwiftcom import Event
+from .zwiftcom.const import items as list_of_items
+
 
 
 logger = logging.getLogger(__name__)
@@ -132,15 +134,15 @@ async def event_embed(message, event, emojis=[]):
             footer.append('no tt bikes')
 
     if event.bike_hash is not None:
-        embed.add_field(name='Fixed Bike', value=event.fixed_bike_name)
+        embed.add_field(name='Fixed Bike', value=get_item(event.bike_hash))
+
+    if event.jersey_hash is not None:
+        embed.add_field(name='Fixed jersey', value=get_item(event.jersey_hash))
 
     for tag in event.tags:
         handle_tag = handle_event_tag(tag)
         if handle_tag is not None:
             footer.append(handle_tag)
-
-    if event.jersey_hash is not None:
-        footer.append('fixed jersey')
 
     if footer:
         embed.set_footer(text=", ".join(footer))
@@ -153,6 +155,8 @@ def handle_event_tag(tag):
         return 'doubledraft'
     elif tag == 'ttbikesdraft':
         return 'tt bikes draft'
+    elif tag == 'jerseyunlock':
+        return "jerseyunlock"
     elif 'bike_cda_bias' in tag:
         return f'CDA: {get_tag_value(tag)}'
     elif 'front_wheel_grams' in tag:
@@ -169,11 +173,20 @@ def handle_event_tag(tag):
         return f'FW override: {get_tag_value(tag)}'
     elif 'rwheeloverride' in tag:
         return f'RW override: {get_tag_value(tag)}'
+    elif 'completionprize' in tag:
+        return f'Completionprize: {get_tag_value(tag)}'
     return None
 
 def get_tag_value(tag):
     """Obtain value from tag setting"""
-    return tag.split('=')[-1]
+    item_id = int(tag.split('=')[-1])
+    return get_item(item_id)
+
+def get_item(item_id):
+    """Obtain item name from item id"""
+    if item_id in list_of_items:
+        return list_of_items[item_id]
+    return f"Unknown ({item_id})"
 
 class Zwift(commands.Cog):
 

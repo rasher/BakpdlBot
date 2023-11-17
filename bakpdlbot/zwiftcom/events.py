@@ -5,7 +5,7 @@ from abc import ABC
 import pendulum
 import requests
 
-from .const import worlds, routes, bikes
+from .const import worlds, routes, bikes, items
 
 logger = logging.getLogger(__name__)
 
@@ -51,13 +51,6 @@ class Eventish(ABC):
             route = 'Unknown'
         return route
 
-    @property
-    def fixed_bike_name(self):
-        bikename = bikes.get(self.bike_hash)
-        if bikename is None:
-            logger.warning("Unknown bike id: %s", self.bike_hash)
-            bikename = 'Unknown'
-        return bikename
 
     @property
     def powerups(self):

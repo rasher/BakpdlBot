@@ -1775,4 +1775,14 @@ bikes = {
     3402382031: 'Cadex Tri 2022',
     3469325930: 'Factor One',
     3572756959: 'Cadex Tri 2022',
+    1456463855: 'Tron (Zwift Concept Z1)'
+}
+
+kits = {
+    461057788: "Backpedal",
+}
+
+items = {
+    **kits,
+    **bikes
 }
