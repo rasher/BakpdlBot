@@ -94,7 +94,7 @@ async def event_embed(message, event, emojis=[]):
     cats_text = []
     footer = []
     for subgroup in event.event_subgroups:
-        route = "" if same_route else ", {}".format(subgroup.route)
+        route = "" if same_route else ", {}".format(subgroup.route['name'])
         world = "" if same_world else " ({})".format(subgroup.map)
 
         cat_rules = ""
