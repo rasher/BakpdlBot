@@ -10,6 +10,7 @@ from html import unescape
 import demjson3 as demjson
 import requests_html
 from requests import Response, Session
+from urllib.parse import urlparse, parse_qs
 
 logger = logging.getLogger(__name__)
 
@@ -569,6 +570,17 @@ class Profile(Fetchable):
         country = self.country
         if country is not None:
             return countries.get(country)
+
+    @property
+    def team(self) -> Team:
+        taglist = self.html.xpath("//th[normalize-space() = 'Team'][1]/following-sibling::td[1]/a")
+
+        if len(taglist) == 1:
+            href = taglist[0].attrs['href']
+            parsed_url = urlparse(href)
+            parsed_qs = parse_qs(parsed_url.query)
+            if 'id' in parsed_qs:
+                return Team(parsed_qs['id'][0], self.scraper)
 
     def __str__(self):
         return "{0.name} ({0.cat}) <{0.id}>".format(self)
