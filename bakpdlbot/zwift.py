@@ -74,10 +74,10 @@ async def event_embed(message, event, emojis=[]):
 
     # Check if subgroups are on separate worlds and/or routes
     same_world = len(set([sg.map for sg in event.event_subgroups])) == 1
-    same_route = len(set([sg.route['id'] for sg in event.event_subgroups])) == 1
+    same_route = len(set([sg.route['signature'] for sg in event.event_subgroups])) == 1
 
     if same_route:
-        embed.add_field(name='Route', value=event.route['route'])
+        embed.add_field(name='Route', value=event.route['name'])
     if same_world:
         embed.add_field(name='World', value=event.map)
 
@@ -88,13 +88,13 @@ async def event_embed(message, event, emojis=[]):
     elif event.duration_in_seconds:
         embed.add_field(name='Duration', value=ago.human(timedelta(seconds=event.duration_in_seconds), past_tense="{}"))
     elif event.laps:
-        distance_m = event.route['leadindistance'] + (int(event.laps) * event.route['lapdistance'])
+        distance_m = event.route['leadinDistanceInMeters'] + (int(event.laps) * event.route['distanceInMeters'])
         embed.add_field(name='Laps', value="%d (%.1f km)" % (event.laps, distance_m/1000.0))
 
     cats_text = []
     footer = []
     for subgroup in event.event_subgroups:
-        route = "" if same_route else ", {}".format(subgroup.route)
+        route = "" if same_route else ", {}".format(subgroup.route['name'])
         world = "" if same_world else " ({})".format(subgroup.map)
 
         cat_rules = ""
@@ -185,7 +185,7 @@ def get_tag_value(tag):
 def get_item(item_id):
     """Obtain item name from item id"""
     if item_id in list_of_items:
-        return list_of_items[item_id]
+        return list_of_items[item_id]['name']
     return f"Unknown ({item_id})"
 
 class Zwift(commands.Cog):
