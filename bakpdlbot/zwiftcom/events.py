@@ -70,6 +70,13 @@ class Eventish(ABC):
                     return None
         return None
 
+    @property
+    def trainer_difficulty_min(self):
+        for tag in self.tags:
+            if tag.startswith('trainer_difficulty_min='):
+                return tag.split('trainer_difficulty_min=')[-1]
+        return None
+
     def __init__(self, data: dict):
         self._data = data
 

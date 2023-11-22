@@ -101,6 +101,9 @@ async def event_embed(message, event, emojis=[]):
         for rule in subgroup.rules_set:
             if rule == Event.NO_DRAFTING:
                 cat_rules = '(no draft)'
+        for subtag in subgroup.tags:
+            if 'trainer_difficulty_min' in subtag and not event.trainer_difficulty_min:
+                cat_rules = cat_rules + f'(TD:{float(get_tag_value(subtag, False)):.0%})'
         cats_text.append(
             "{emoji} {start} {s.from_pace_value:.1f}-{s.to_pace_value:.1f} w/kg"
             "{route}{world} {cat_rules}".format(
@@ -119,6 +122,8 @@ async def event_embed(message, event, emojis=[]):
 
     if event.category_enforcement:
         footer.append('category enforcement')
+    if event.trainer_difficulty_min:
+        footer.append(f'TD:{float(event.trainer_difficulty_min):.0%}')
     for rule in event.rules_set:
         if rule == Event.NO_DRAFTING:
             footer.append('no draft')
@@ -158,17 +163,17 @@ def handle_event_tag(tag):
     elif tag == 'jerseyunlock':
         return "jerseyunlock"
     elif 'bike_cda_bias' in tag:
-        return f'CDA: {get_tag_value(tag)}'
+        return f'CDA: {get_tag_value(tag, is_item=False)}'
     elif 'front_wheel_grams' in tag:
-        return f'FW grams: {get_tag_value(tag)}'
+        return f'FW grams: {get_tag_value(tag, is_item=False)}'
     elif 'front_wheel_cda_bias' in tag:
-        return f'FW CDA: {get_tag_value(tag)}'
+        return f'FW CDA: {get_tag_value(tag, is_item=False)}'
     elif 'rear_wheel_grams' in tag:
-        return f'RW grams: {get_tag_value(tag)}'
+        return f'RW grams: {get_tag_value(tag, is_item=False)}'
     elif 'rear_wheel_cda_bias' in tag:
-        return f'RW CDA: {get_tag_value(tag)}'
+        return f'RW CDA: {get_tag_value(tag, is_item=False)}'
     elif 'front_wheel_crr' in tag:
-        return f'FW CRR: {get_tag_value(tag)}'
+        return f'FW CRR: {get_tag_value(tag, is_item=False)}'
     elif 'fwheel_override' in tag:
         return f'FW override: {get_tag_value(tag)}'
     elif 'rwheeloverride' in tag:
@@ -177,10 +182,15 @@ def handle_event_tag(tag):
         return f'Completionprize: {get_tag_value(tag)}'
     return None
 
-def get_tag_value(tag):
+def get_tag_value(tag, is_item=True):
     """Obtain value from tag setting"""
-    item_id = int(tag.split('=')[-1])
-    return get_item(item_id)
+    item_id = tag.split('=')[-1]
+    if is_item is False:
+        return item_id
+    try:
+        return get_item(int(item_id))
+    except:
+        return f"Unknown {item_id}"
 
 def get_item(item_id):
     """Obtain item name from item id"""
