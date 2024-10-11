@@ -126,6 +126,8 @@ def object_key(o):
 
 gamedictionary = {}
 for plural, sublist in retrieve_data().items():
+    if plural == '$':
+        continue
     singular = list(sublist[0].keys())[0]
     gamedictionary[plural.lower()] = {object_key(r): convert_item(r['$'], singular) for r in sublist[0][singular]}
 

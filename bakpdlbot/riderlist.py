@@ -175,6 +175,18 @@ def is_zrl_ttt(race: Dict) -> bool:
         # ZRL 22/23 Round 3
         date(2023,  1, 17), date(2023,  1, 18),  # Week 2
         date(2023,  2,  7), date(2023,  2,  8),  # Week 5
+        # ZRL 23/24 Round 1
+        date(2023,  9, 26), date(2023,  9, 27),  # Week 3
+        date(2023, 10, 17), date(2023, 10, 18),  # Week 3
+        # ZRL 23/24 Round 2
+        date(2023, 11, 28), date(2023, 11, 29),  # Week 3
+        date(2023, 12, 19), date(2023, 12, 20),  # Week 3
+        # ZRL 23/24 Round 3
+        date(2024,  2,  6), date(2024,  2,  7),  # Week 3
+        date(2024,  2, 27), date(2024,  2, 28),  # Week 3
+        # ZRL 24/25 Round 1
+        date(2024,  9, 10), date(2024,  9, 11),  # Week 1
+        date(2024, 10,  1), date(2024, 10,  2),  # Week 4
     ]
     race_date = datetime.utcfromtimestamp(race['event_date'])
     return race_date.date() in ttt_dates
@@ -207,6 +219,7 @@ def filter_sdur(s):
 
 def filter_csv_dict(row, *args, **kwargs):
     string_io = io.StringIO()
+    write_header=False
     if 'write_header' in kwargs:
         write_header = kwargs['write_header']
         del(kwargs['write_header'])

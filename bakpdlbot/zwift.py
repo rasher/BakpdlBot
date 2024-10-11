@@ -66,7 +66,7 @@ async def event_embed(message, event, emojis=[]):
 
     start = event.event_start
     embed = (
-        discord.Embed(title=event.name, url=event.url)
+        discord.Embed(title=event.name.replace('|', r'\|'), url=event.url)
             # .set_image(url=event.image_url)
             .add_field(name='Type', value=event.event_type.lower().replace('_', ' ').title())
     )
@@ -104,12 +104,17 @@ async def event_embed(message, event, emojis=[]):
         for subtag in subgroup.tags:
             if 'trainer_difficulty_min' in subtag and not event.trainer_difficulty_min:
                 cat_rules = cat_rules + f'(TD:{float(get_tag_value(subtag, False)):.0%})'
+        if subgroup.range_access_label:
+            access = "{s.range_access_label}".format(s=subgroup)
+        else:
+            access = "{s.from_pace_value:.1f}-{s.to_pace_value:.1f} w/kg".format(s=subgroup)
         cats_text.append(
-            "{emoji} {start} {s.from_pace_value:.1f}-{s.to_pace_value:.1f} w/kg"
+            "{emoji} {start} {access}"
             "{route}{world} {cat_rules}".format(
                 s=subgroup, emoji=cat_emoji.get(subgroup.subgroup_label, subgroup.subgroup_label,),
                 route=route, world=world, cat_rules=cat_rules,
-                start=TimeTag(subgroup.event_subgroup_start).short_time
+                start=TimeTag(subgroup.event_subgroup_start).short_time,
+                access=access
             )
         )
     embed.add_field(name='Cats', value="\n".join(cats_text), inline=False)

@@ -462,7 +462,7 @@ class Profile(Fetchable):
     @property
     def punch(self):
         s = self._get_text('#table_scroll_overview > div.btn-toolbar > div.pull-right > div.progress > div.progress-bar > span')
-        m = re.search('Punch:\s*(?P<punch>[0-9\.]*)%', s)
+        m = re.search(r'Punch:\s*(?P<punch>[0-9\.]*)%', s)
         if m:
             return float(m.group('punch'))
 
@@ -505,8 +505,12 @@ class Profile(Fetchable):
     @property
     def cp_watts(self):
         if not self._cp_watts:
-            url_watts = self.URL_CP.format(id=self.id, type='watts')
-            self._cp_watts = self.scraper.get_url(url_watts).json()
+            try:
+                url_watts = self.URL_CP.format(id=self.id, type='watts')
+                self._cp_watts = self.scraper.get_url(url_watts).json()
+            except:
+                traceback.print_exc()
+                return None
         if not self._cp_watts or len(self._cp_watts['efforts']) == 0:
             return None
         return {effort: {p['x']: p['y'] for p in data} for effort, data in self._cp_watts['efforts'].items()}
@@ -570,6 +574,12 @@ class Profile(Fetchable):
         country = self.country
         if country is not None:
             return countries.get(country)
+
+    @property
+    def rs(self):
+        taglist = self.html.xpath("//th[normalize-space() = 'Zwift Racing Score'][1]/following-sibling::td[1]/b")
+        if len(taglist) == 1:
+            return taglist[0].text.strip()
 
     @property
     def team(self) -> Team:
