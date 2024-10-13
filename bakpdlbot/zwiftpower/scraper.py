@@ -468,10 +468,14 @@ class Profile(Fetchable):
 
     @property
     def races(self):
-        if not self._races:
-            url = self.URL_RACES.format(id=self.id)
-            self._races = self.scraper.get_url(url).json()['data']
-            self._races = list(filter(lambda e: e['event_date'] != '', self._races))
+        if self._races is None:
+            try:
+                url = self.URL_RACES.format(id=self.id)
+                self._races = self.scraper.get_url(url).json()['data']
+                self._races = list(filter(lambda e: e['event_date'] != '', self._races))
+            except Exception as e:
+                traceback.print_exc()
+                self._races = []
         return self._races
 
     @property
